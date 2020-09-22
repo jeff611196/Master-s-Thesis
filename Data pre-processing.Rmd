@@ -1,0 +1,3055 @@
+---
+title: "master's thesis"
+output: html_document
+---
+
+traffic
+```{r}
+data = read.csv("E:\\論文\\traffic_all_2018\\traffic_all.csv")
+```
+
+sort
+```{r}
+type5 = data[which(data$Type ==5),]
+write.table(type5,file="E:\\論文\\traffic_all_2018\\type5.csv",sep=",",row.names=F, na = "NA")
+
+type31 = data[which(data$Type ==31),]
+write.table(type31,file="E:\\論文\\traffic_all_2018\\type31.csv",sep=",",row.names=F, na = "NA")
+
+type32 = data[which(data$Type ==32),]
+write.table(type32,file="E:\\論文\\traffic_all_2018\\type32.csv",sep=",",row.names=F, na = "NA")
+
+type41 = data[which(data$Type ==41),]
+write.table(type41,file="E:\\論文\\traffic_all_2018\\type41.csv",sep=",",row.names=F, na = "NA")
+
+type42 = data[which(data$Type ==42),]
+write.table(type42,file="E:\\論文\\traffic_all_2018\\type42.csv",sep=",",row.names=F, na = "NA")
+```
+
+adjust type of time
+```{r}
+data = read.csv("E:\\論文\\traffic_all_2018\\traffic_all.csv")
+x = unique(data$Time)
+x = as.data.frame(x)
+zz = matrix(nrow=105120)
+for(t in 1:105120)
+{
+zz[t,1] = nchar(as.vector(x[t,1]))
+}
+length(which(nchar(as.vector(x[,1]))== 16))
+#as.Date("2016/1/1 00:00")
+#substr(z[2,1], 2, 4)
+#nchar(as.vector(z[2,1]))
+
+levels = levels(type5$Time)
+levels(type5$Time) = c(levels, "2016-01-01 00:00")
+type5[1:325,2] = "2016-01-01 00:00"
+type5$Time = droplevels(type5$Time)
+y = as.data.frame(levels(type5$Time))
+type5$Time = relevel(type5$Time, "2016-01-01 00:00")
+```
+
+Master list
+```{r}
+#time list
+type42 = read.csv("E:\\論文\\traffic_all_2018\\type42.csv")
+x = matrix(nrow=35058528)
+type42 = cbind(x,type42)
+colnames(type42)[1] = "Index"
+#write.table(type32,file="E:\\論文\\traffic_all_2018\\type32_modify_index.csv",sep=",",row.names=F, na = "NA")
+#line up time
+type32 = read.csv("E:\\論文\\traffic_all_2018\\type32_modify_index.csv")
+list_origian = read.csv("C:\\Users\\jeff\\Desktop\\time and series\\time list 2018.csv")
+
+
+list = list_origian
+colnames(list)[3] = "01F0005S"
+x = type5[which(type5$ID == "01F0005S"),]
+for(t in 1:107136)
+{
+tryCatch({
+list[which(list$Index == t),]$"01F0005S" = x[which(x$Index == t),]$Value
+}, error=function(e){})
+}
+write.table(list,file="E:\\論文\\type5\\North\\01F0005S.csv",sep=",",row.names=F, na = "NA")
+```
+
+type5_colbind
+```{r}
+x = list.files( path = "E:\\論文\\type5\\North", pattern="*.csv")
+getwd()
+setwd("E:\\論文\\type5\\North")
+library(data.table)
+y <- vector("list", length(x))
+for (i in seq_along(x))
+  y[[i]] = fread(x[i], header= TRUE)[,3] # 讀進每一個csv資料
+z = do.call(cbind,y)
+list = fread(x[1], header= TRUE)
+table = as.data.frame(list)[,-3]
+table = cbind(table,y)
+write.table(table,file="E:\\論文\\type5\\North\\type5_total_5min.csv",sep=",",row.names=F, na = "NA")
+
+myDT <- table[!complete.cases(table), ]
+```
+
+delete no exist time
+```{r}
+#1
+data = read.csv("E:\\論文\\total小表\\2016_type42_Central.csv", check.names = FALSE)
+y = as.data.frame(substring(data$Time,1,10))
+list = 1:107136
+y = cbind(list,y)
+y1 = as.data.frame(y[which(y[,2] == '2016-02-29'),])
+y2 = as.data.frame(y[which(y[,2] == '2016-02-30'),])
+y3 = as.data.frame(y[which(y[,2] == '2016-02-31'),])
+y4 = as.data.frame(y[which(y[,2] == '2016-04-31'),])
+y5 = as.data.frame(y[which(y[,2] == '2016-06-31'),])
+y6 = as.data.frame(y[which(y[,2] == '2016-09-31'),])
+y7 = as.data.frame(y[which(y[,2] == '2016-11-31'),])
+
+test = rbind(as.matrix(y1[,1]),as.matrix(y2[,1]),as.matrix(y3[,1]),as.matrix(y4[,1]),as.matrix(y5[,1]),as.matrix(y6[,1]),
+             as.matrix(y7[,1])) 
+adjust = data[-test,]
+z = 1:105120
+adjust = cbind(z,adjust)
+colnames(adjust)[1] = "adjust"
+write.table(adjust,file="E:\\論文\\total小表調整時間\\2016_type5_North.csv",sep=",",row.names=F, na = "NA")
+
+#2
+data = read.csv("E:\\論文\\total小表調整時間\\2016_type5_North.csv", check.names = FALSE)
+x = matrix( NA , nrow = 105120, ncol = 1)
+list = 1:105120
+x = cbind(list,x)
+for (i in 1:105120)
+{
+x[i,2] = sum(is.na(data[i,]))
+}
+y = unique(x[,2])
+#more than half is something wrong
+z = x[which(x[,2] > (ncol(data)-3)/2),]
+zz = data[z[,1],]
+
+x = as.data.frame(substring(zz$Time,1,10))
+#y = unique(x)
+#library(dplyr)
+#colnames(y) = "time"
+colnames(x) = "time"
+group = group_by(x,time)
+group = summarise(group,count = n())
+write.table(group,file="E:\\論文\\一半以上NA時間段\\2016_type5_North.csv",sep=",",row.names=F, na = "NA")
+
+#3
+setwd("E:\\論文\\一半以上NA時間段")
+csvpath = "E:\\論文\\一半以上NA時間段"
+csvfilesn = list.files( path = csvpath, pattern="*.csv")
+#recursive = T
+tmprt = function(rtcsv){
+  read.csv( rtcsv, stringsAsFactors = FALSE)
+}
+lhudata = lapply(paste(csvpath,csvfilesn, sep = "/"), tmprt)
+
+data = lhudata[[1]]
+for (i in 2:25)
+{
+data = rbind(data,lhudata[[i]])
+}
+x = as.matrix(unique(data$time))
+
+#4 2016 nrow = 101952
+data = read.csv("E:\\論文\\total小表調整時間\\2016_type5_North.csv", check.names = FALSE)
+y = as.data.frame(substring(data$Time,1,10))
+list = 1:105120
+y = cbind(list,y)
+y1 = as.data.frame(y[which(y[,2] == '2016-05-19'),])
+y2 = as.data.frame(y[which(y[,2] == '2016-05-27'),])
+y3 = as.data.frame(y[which(y[,2] == '2016-06-16'),])
+y4 = as.data.frame(y[which(y[,2] == '2016-06-20'),])
+y5 = as.data.frame(y[which(y[,2] == '2016-06-21'),])
+y6 = as.data.frame(y[which(y[,2] == '2016-06-25'),])
+y7 = as.data.frame(y[which(y[,2] == '2016-08-29'),])
+y8 = as.data.frame(y[which(y[,2] == '2016-08-31'),])
+y9 = as.data.frame(y[which(y[,2] == '2016-09-22'),])
+y10 = as.data.frame(y[which(y[,2] == '2016-09-23'),])
+y11 = as.data.frame(y[which(y[,2] == '2016-09-29'),])
+
+test = rbind(as.matrix(y1[,1]),as.matrix(y2[,1]),as.matrix(y3[,1]),as.matrix(y4[,1]),as.matrix(y5[,1]),as.matrix(y6[,1]),
+             as.matrix(y7[,1]),as.matrix(y8[,1]),as.matrix(y9[,1]),as.matrix(y10[,1]),as.matrix(y11[,1])) 
+
+adjust = data[-test,]
+z = 1:101952
+adjust = cbind(z,adjust)
+colnames(adjust)[1] = "adjust2"
+write.table(adjust,file="E:\\論文\\total小表調整時間2\\2016_type5_North.csv",sep=",",row.names=F, na = "NA")
+
+#2017、2018 nrow = 105120 no change
+```
+
+sum all site
+```{r}
+#2016 nrow = 101952
+data = read.csv("E:\\論文\\traffic\\total小表調整時間2\\2016_type5_North.csv", check.names = FALSE)
+
+x = matrix( NA , nrow = 101952, ncol = 1)
+list = data[,1:4]
+x = cbind(list,x)
+colnames(x)[5] = 'all site'
+for (i in 1:101952)
+{
+x[i,5] = round(mean(as.numeric(data[i,5:ncol(data)]),na.rm = T)*(ncol(data)-4),0)
+}
+write.table(x,file="E:\\論文\\traffic\\sum all site\\2016_type5_North.csv",sep=",",row.names=F, na = "NA")
+
+#2017、2018 nrow = 105120
+file = read.csv("E:\\論文\\traffic\\2017 2018順序.csv", check.names = FALSE,header = F)
+
+for (t in 1:50)
+{
+data = read.csv(as.character(file[t,1]), check.names = FALSE)
+x = matrix( NA , nrow = 105120, ncol = 1)
+list = data[,1:3]
+x = cbind(list,x)
+colnames(x)[4] = 'all site'
+for (i in 1:105120)
+{
+  x[i,4] = round(mean(as.numeric(data[i,4:ncol(data)]),na.rm = T)*(ncol(data)-3),0)
+}
+write.table(x,file = as.character(file[t,2]),sep=",",row.names=F, na = "NA")
+}
+```
+
+change colnames
+```{r}
+csvfilesn = as.matrix(list.files( path = 'E:/論文/traffic/sum all site', pattern="*.csv",full.names = T))
+csvfilesn1 = as.matrix(list.files( path = 'E:/論文/traffic/sum all site', pattern="*.csv"))
+x = as.matrix(substring(csvfilesn1[,1],6,nchar(as.character(csvfilesn1[,1]))-4))
+y = as.matrix(unique(x[,1]))
+
+a = "read.csv('"
+b = "', check.names = FALSE,header = T)"
+
+d = "write.table(z,file='"
+e = "',sep=',',row.names=F, na = 'NA')"
+
+f = as.matrix(substring(csvfilesn[,1],1,14))
+g = as.matrix(substring(csvfilesn[,1],27,nchar(as.character(csvfilesn[,1]))))
+h = "sum all site(change colnames)"
+j = as.matrix(paste0(f,h,g))
+
+for (t in 1:25)
+{
+z = as.matrix(csvfilesn[which(x[,1] == y[t,1]),1])
+c = as.matrix(paste0(a,z,b))
+
+k = as.matrix(j[which(x[,1] == y[t,1]),1])
+l = as.matrix(paste0(d,k,e))
+
+for (i in 1:length(c))
+{
+z = parse(text = c[i])
+z = eval(z)
+colnames(z)[length(z)] = y[t,1]
+zz = parse(text = l[i])
+eval(zz)
+}
+}
+```
+
+merge different type
+```{r}
+csvfilesn = as.matrix(list.files( path = 'E:/論文/traffic/sum all site(change colnames)', pattern="*.csv",full.names = T))
+csvfilesn1 = as.matrix(list.files( path = 'E:/論文/traffic/sum all site(change colnames)', pattern="*.csv"))
+x = as.matrix(substring(csvfilesn1[,1],1,4))
+y = as.matrix(substring(csvfilesn1[,1],13,nchar(as.character(csvfilesn1[,1]))-4))
+y[which(y[,1] == "orth"),] = "North"
+y[which(y[,1] == "sinchu"),] = "Hsinchu"
+y[which(y[,1] == "entral"),] = "Central"
+y[which(y[,1] == "hiayi"),] = "Chiayi"
+y[which(y[,1] == "aohsiung"),] = "Kaohsiung"
+yy = as.matrix(paste(x,y,sep = "_"))
+yyy = unique(yy)
+yyynormal = as.matrix(substring(yyy[,1],1,4))
+yyy1 = as.matrix(yyy[which(yyynormal[,1] == "2016"),])
+yyy2 = as.matrix(yyy[which(yyynormal[,1] == "2017"),])
+yyy3 = as.matrix(yyy[which(yyynormal[,1] == "2018"),])
+
+a = "read.csv('"
+b = "', check.names = FALSE,header = T)"
+
+d = "write.table(xx,file='"
+e = "',sep=',',row.names=F, na = 'NA')"
+
+f = as.matrix(substring(csvfilesn[,1],1,14))[1]
+h = "merge different type"
+
+list1 = read.csv("E:/論文/traffic/sum all site(change colnames)/2016_type31_Central.csv", check.names = FALSE,header = T)
+list2 = read.csv("E:/論文/traffic/sum all site(change colnames)/2017_type31_Central.csv", check.names = FALSE,header = T)
+list3 = read.csv("E:/論文/traffic/sum all site(change colnames)/2018_type31_Central.csv", check.names = FALSE,header = T)
+
+for (t in seq_along(yyy1))
+{
+xxx = as.matrix(csvfilesn[which(yy[,1] == yyy1[t,1]),1])
+c = as.matrix(paste0(a,xxx,b))
+  
+g = paste0("/",yyy1[t],".csv")
+j = as.matrix(paste0(f,h,g))
+l = as.matrix(paste0(d,j,e))
+xx = list1[,1:4]
+  
+for (i in seq_along(xxx))
+{
+z = parse(text = c[i])
+z = eval(z)
+xx = cbind(xx,z[,ncol(z)])
+colnames(xx)[ncol(xx)] = colnames(z)[ncol(z)]
+}
+zz = parse(text = l)
+eval(zz)
+}
+
+
+for (t in seq_along(yyy2))
+{
+xxx = as.matrix(csvfilesn[which(yy[,1] == yyy2[t,1]),1])
+c = as.matrix(paste0(a,xxx,b))
+  
+g = paste0("/",yyy2[t],".csv")
+j = as.matrix(paste0(f,h,g))
+l = as.matrix(paste0(d,j,e))
+xx = list2[,1:3]
+  
+for (i in seq_along(xxx))
+{
+z = parse(text = c[i])
+z = eval(z)
+xx = cbind(xx,z[,ncol(z)])
+colnames(xx)[ncol(xx)] = colnames(z)[ncol(z)]
+}
+zz = parse(text = l)
+eval(zz)
+}
+
+
+for (t in seq_along(yyy3))
+{
+xxx = as.matrix(csvfilesn[which(yy[,1] == yyy3[t,1]),1])
+c = as.matrix(paste0(a,xxx,b))
+  
+g = paste0("/",yyy3[t],".csv")
+j = as.matrix(paste0(f,h,g))
+l = as.matrix(paste0(d,j,e))
+xx = list3[,1:3]
+  
+for (i in seq_along(xxx))
+{
+z = parse(text = c[i])
+z = eval(z)
+xx = cbind(xx,z[,ncol(z)])
+colnames(xx)[ncol(xx)] = colnames(z)[ncol(z)]
+}
+zz = parse(text = l)
+eval(zz)
+}
+```
+
+change to hour
+```{r}
+csvfilesn = as.matrix(list.files( path = 'E:/論文/traffic/merge different region', pattern="*.csv",full.names = T))
+csvfilesn1 = as.matrix(list.files( path = 'E:/論文/traffic/merge different region', pattern="*.csv"))
+
+a = "read.csv('"
+b = "', check.names = FALSE,header = T)"
+
+d = "write.table(x,file='"
+e = "',sep=',',row.names=F, na = 'NA')"
+
+f = as.matrix(substring(csvfilesn[,1],1,14))[1]
+h = "change to hour"
+list = matrix( NA , ncol = 1 , nrow = 15)
+
+for (s in seq_along(csvfilesn))
+{
+  xxx = as.matrix(csvfilesn[which(csvfilesn1[,1] == csvfilesn1[s,1]),1])
+  c = as.matrix(paste0(a,xxx,b))
+  
+  g = paste0("/",csvfilesn1[s,1])
+  j = as.matrix(paste0(f,h,g))
+  l = as.matrix(paste0(d,j,e))
+  
+  z = parse(text = c)
+  z = eval(z)
+  zz = z[,(ncol(z)-4):ncol(z)]
+  list[s,1] = sum(is.na(zz))
+  x = matrix( NA , ncol = 5 , nrow = (nrow(zz)/12))
+  colnames(x) = colnames(zz)
+  y = as.matrix(unique(substring(z$Time,1,13)))
+  colnames(y) = "Time"
+  
+  for (t in 1:5)
+  {
+   for (i in 1:(nrow(zz)/12))
+   {
+     x[i,t] = sum(zz[(1+12*(i-1)):(12*i),t])
+   }
+  }
+  x = cbind(y,x)
+  xx = parse(text = l)
+  eval(xx)
+}
+```
+
+add one hot encoding col of region
+```{r}
+csvfilesn = as.matrix(list.files( path = 'E:/論文/traffic/change to hour', pattern="*.csv",full.names = T))
+csvfilesn1 = as.matrix(list.files( path = 'E:/論文/traffic/change to hour', pattern="*.csv"))
+x = unique(csvfilesn1)
+xx = as.matrix(substring(x[,1],1,4))
+xx1 = as.matrix(x[which(xx[,1] == "2016"),])
+xx2 = as.matrix(x[which(xx[,1] != "2016"),])
+
+a = "read.csv('"
+b = "', check.names = FALSE,header = T)"
+
+d1 = "write.table(list,file='"
+d2 = "write.table(list,file='"
+e = "',sep=',',row.names=F, na = 'NA')"
+
+f = as.matrix(substring(csvfilesn[,1],1,14))[1]
+h = "add one hot encoding col of region"
+
+list1 = read.csv("E:/論文/traffic/change to hour/2016_Central.csv", check.names = FALSE,header = T)
+list1 = matrix( NA , nrow = nrow(list1), ncol = 5)
+colnames(list1) = c( "North" , "Hsinchu" , "Central" , "Chiayi" , "Kaohsiung" )
+list2 = read.csv("E:/論文/traffic/change to hour/2017_Central.csv", check.names = FALSE,header = T)
+list2 = matrix( NA , nrow = nrow(list2), ncol = 5)
+colnames(list2) = c( "North" , "Hsinchu" , "Central" , "Chiayi" , "Kaohsiung" )
+
+for (t in seq_along(xx1))
+{
+  xxx = as.matrix(csvfilesn[which(csvfilesn1[,1] == xx1[t,1]),1])
+  c = as.matrix(paste0(a,xxx,b))
+  
+  g = paste0("/",xx1[t])
+  j = as.matrix(paste0(f,h,g))
+  l = as.matrix(paste0(d1,j,e))
+  list = list1
+  
+  for (i in seq_along(xxx))
+  {
+    z = parse(text = c[i])
+    z = eval(z)
+    list = cbind(z,list)
+  }
+  zz = parse(text = l)
+  eval(zz)
+}
+
+
+for (t in seq_along(xx2))
+{
+  xxx = as.matrix(csvfilesn[which(csvfilesn1[,1] == xx2[t,1]),1])
+  c = as.matrix(paste0(a,xxx,b))
+  
+  g = paste0("/",xx2[t])
+  j = as.matrix(paste0(f,h,g))
+  l = as.matrix(paste0(d2,j,e))
+  list = list2
+  
+  for (i in seq_along(xxx))
+  {
+    z = parse(text = c[i])
+    z = eval(z)
+    list = cbind(z,list2)
+  }
+  zz = parse(text = l)
+  eval(zz)
+}
+```
+
+one hot encoding of region
+```{r}
+csvfilesn = as.matrix(list.files( path = 'E:/論文/traffic/add one hot encoding col of region', pattern="*.csv",full.names = T))
+csvfilesn1 = as.matrix(list.files( path = 'E:/論文/traffic/add one hot encoding col of region', pattern="*.csv"))
+x = as.matrix(substring(csvfilesn1[,1],6,nchar(as.character(csvfilesn1[,1]))-4))
+xx = unique(x)
+xx1 = matrix( NA , nrow = 5, ncol = 3)
+for (t in 1:5)
+{ 
+xx1[t,] = csvfilesn1[which(x[,1] == xx[t,1]),]
+}
+
+a = "read.csv('"
+b = "', check.names = FALSE,header = T)"
+
+d = "write.table(z,file='"
+e = "',sep=',',row.names=F, na = 'NA')"
+
+f = as.matrix(substring(csvfilesn[,1],1,14))[1]
+h = "one hot encoding of region"
+for (t in 1:5)
+{
+xx1[t,]
+for (i in seq_along(xx1[t,]))
+{
+  xxx = as.matrix(csvfilesn[which(csvfilesn1[,1] == xx1[t,i]),1])
+  c = as.matrix(paste0(a,xxx,b))
+  
+  g = paste0("/",xx1[t,i])
+  j = as.matrix(paste0(f,h,g))
+  l = as.matrix(paste0(d,j,e))
+  
+  z = parse(text = c)
+  z = eval(z)
+  z[,(ncol(z)-4):ncol(z)] = 0
+  z[,which(colnames(z) == xx[t,1])] = 1
+
+  zz = parse(text = l)
+  eval(zz)
+}
+}
+```
+
+merge different year
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/traffic/one hot encoding of region', pattern="*.csv",full.names = T, recursive = T))
+
+#North
+data_North = data[which(substring(data,nchar(data)-8,nchar(data)-4) == "North"),]
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data_North, a)
+output = do.call(rbind,all.data)
+write.table(output,file="E:/論文/traffic/merge different year/North.csv",sep=",",row.names = F, na = "NA")
+
+
+
+#Other area
+area = "
+data = as.matrix(list.files( path = 'E:/論文/traffic/one hot encoding of region', pattern=\"*.csv\",full.names = T, recursive = T))
+
+#North
+data_North = data[which(substring(data,nchar(data)-12,nchar(data)-4) == \"North\"),]
+#different area change the above nchar
+
+
+a = function(b){
+read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data_North, a)
+output = do.call(rbind,all.data)
+write.table(output,file=\"E:/論文/traffic/merge different year/North.csv\",sep=\",\",row.names = F, na = \"NA\")
+"
+x = gsub("North", "Kaohsiung", area)
+y = parse(text = x)
+z = eval(y)
+```
+
+
+
+
+
+tpower
+```{r}
+data = read.delim("E:\\論文\\tpower\\台電2015-2016.txt", header = T,sep="")
+data1 = read.delim("E:\\論文\\tpower\\台電20170101-20170905.txt", header = T,sep="")
+data2 = read.delim("E:\\論文\\tpower\\台電20170905-20190113.txt", header = T,sep="")
+data = rbind(data,data1,data2)
+```
+
+sort
+```{r}
+dataa = read.delim("E:\\論文\\tpower\\time and series.csv", header = F,sep="")
+#library(dplyr)
+x = select(data,3)
+y = unique(x)
+z = matrix(NA, ncol = 1, nrow = nrow(y))
+for (i in 1:nrow(dataa))
+{
+  z[which(as.matrix(y[,1]) == dataa[i,1]),] = 0
+}
+yy = as.matrix(y[which(is.na(z)),])
+write.table(yy,file="E:\\論文\\tpower\\sort.csv",sep=",",row.names = F, col.names = F, na = "NA")
+#data1 = read.delim("E:\\論文\\tpower\\台電2015-2016.txt", header = T,sep="")
+#data2 = read.delim("E:\\論文\\tpower\\台電20170101-20170905.txt", header = T,sep="")
+#data3 = read.delim("E:\\論文\\tpower\\台電20170905-20190113.txt", header = T,sep="")
+#data1 = rbind(data1,data2,data3)
+#x = unique(data1[,3])
+```
+
+region
+```{r}
+data = read.delim("E:\\論文\\tpower\\台電2015-2016.txt", header = T,sep="")
+data1 = read.delim("E:\\論文\\tpower\\台電20170101-20170905.txt", header = T,sep="")
+data2 = read.delim("E:\\論文\\tpower\\台電20170905-20190113.txt", header = T,sep="")
+data = rbind(data,data1,data2)
+#x = unique(data1[,3])
+x = matrix(NA,ncol = 1,nrow = nrow(data))
+data = cbind(data,x)
+data[,3] = as.character(data[,3])
+
+#dataa = read.delim("E:\\論文\\tpower\\time and series.csv", header = F,sep="")
+#library(dplyr)
+#x = select(data,3)
+#y = unique(x)
+#z = matrix(NA, ncol = 1, nrow = nrow(y))
+#for (i in 1:nrow(dataa))
+#{
+  #z[which(as.matrix(y[,1]) == dataa[i,1]),] = 0
+#}
+#yy = as.matrix(y[which(is.na(z)),])
+#write.table(yy,file="E:\\論文\\tpower\\sort.csv",sep=",",row.names = F, col.names = F, na = "NA")
+a = read.delim("E:\\論文\\tpower\\sort.csv", header = F,sep=",")
+#b = as.matrix(unique(a[,2]))
+region = matrix(NA,ncol = 1,nrow = 223)
+a = cbind(a,region)
+a[which(a$V2 == "新北"),3] = "North"
+a[which(a$V2 == "基隆"),3] = "North"
+a[which(a$V2 == "桃園"),3] = "Hsinchu"
+a[which(a$V2 == "苗栗"),3] = "Hsinchu"
+a[which(a$V2 == "新竹"),3] = "Hsinchu"
+a[which(a$V2 == "南投"),3] = "Central"
+a[which(a$V2 == "彰化"),3] = "Central"
+a[which(a$V2 == "台中"),3] = "Central"
+a[which(a$V2 == "嘉義"),3] = "Chiayi"
+a[which(a$V2 == "台南"),3] = "Chiayi"
+a[which(a$V2 == "雲林"),3] = "Chiayi"
+a[which(a$V2 == "高雄"),3] = "Kaohsiung"
+a[which(a$V2 == "屏東"),3] = "Kaohsiung"
+a[,1] = as.character(a[,1])
+a[,2] = as.character(a[,2])
+
+for (i in 1:nrow(a))
+{
+data[which(data[,3] == a[i,1]),8] = a[i,3]
+}
+write.table(data,file="E:\\論文\\tpower\\all.csv",sep=",",row.names = F, na = "NA")
+```
+
+time list
+#2016
+```{r}
+list = read.csv("E:\\論文\\tpower\\time_gap.csv",header = F)
+list = list[,8:9]
+data = read.delim("E:\\論文\\tpower\\all.csv", header = T,sep=",")
+data[,1] = paste0(substring(data[,1],1,4),"-",substring(data[,1],5,6),"-",substring(data[,1],7,8)," ",substring(data[,1],9,10))
+x = data[which(substring(data[,1],1,4) == "2016"),]
+#y = as.matrix(levels(x[,5]))
+x = x[,-c(4,6:7)]
+x = x[-which(x[,4] == ""),]
+x = x[-which(x[,4] == "N/A"),]
+y = matrix(NA,ncol = 1,nrow = nrow(x))
+x = cbind(x,y)
+for (i in 1:nrow(x))
+{
+x[i,6] = list[which(x[i,1] == list[,2]),1]
+}
+write.table(x,file="E:\\論文\\tpower\\2016_modify_index.csv",sep=",",row.names = F, na = "NA")
+```
+
+#2017
+```{r}
+list = read.csv("E:\\論文\\tpower\\time_gap.csv",header = F)
+list = list[,c(8,10)]
+data = read.delim("E:\\論文\\tpower\\all.csv", header = T,sep=",")
+data[,1] = paste0(substring(data[,1],1,4),"-",substring(data[,1],5,6),"-",substring(data[,1],7,8)," ",substring(data[,1],9,10))
+x = data[which(substring(data[,1],1,4) == "2017"),]
+x = x[,-c(4,6:7)]
+#write.table(x,file="E:\\論文\\tpower\\all_2017\\all_delete non-numeric and some col.csv",sep=",",row.names = F, na = "NA")
+#data = read.csv("E:\\論文\\tpower\\all_2017\\all_delete non-numeric and some col.csv")
+#class(data[,4])
+#z = as.matrix(levels(data[,4]))
+x = x[-which(x[,4] == "檢修"),]
+x = x[-which(x[,4] == ""),]
+x = x[-which(x[,4] == "-"),]
+x = x[-which(x[,4] == "通訊異常"),]
+x = x[-which(x[,4] == "通訊中斷"),]
+write.table(x,file="E:\\論文\\tpower\\2017_modify_index.csv",sep=",",row.names = F, na = "NA")
+data = read.csv("E:\\論文\\tpower\\2017_modify_index.csv")
+class(data[,4])
+y = matrix(NA,ncol = 1,nrow = nrow(x))
+x = cbind(x,y)
+for (i in 1:nrow(x))
+{
+  x[i,6] = list[which(x[i,1] == list[,2]),1]
+}
+write.table(x,file="E:\\論文\\tpower\\2017_modify_index.csv",sep=",",row.names = F, na = "NA")
+```
+
+#2018
+```{r}
+list = read.csv("E:\\論文\\tpower\\time_gap.csv",header = F)
+list = list[,c(8,11)]
+data = read.delim("E:\\論文\\tpower\\all.csv", header = T,sep=",")
+data[,1] = paste0(substring(data[,1],1,4),"-",substring(data[,1],5,6),"-",substring(data[,1],7,8)," ",substring(data[,1],9,10))
+x = data[which(substring(data[,1],1,4) == "2018"),]
+x = x[,-c(4,6:7)]
+#write.table(x,file="E:\\論文\\tpower\\all_2018\\all_delete non-numeric and some col.csv",sep=",",row.names = F, na = "NA")
+#data = read.csv("E:\\論文\\tpower\\all_2018\\all_delete non-numeric and some col.csv")
+#y = as.matrix(levels(data[,4]))
+x = x[-which(x[,4] == ""),]
+write.table(x,file="E:\\論文\\tpower\\2018_modify_index.csv",sep=",",row.names = F, na = "NA")
+data = read.csv("E:\\論文\\tpower\\2018_modify_index.csv")
+class(data[,4])
+y = matrix(NA,ncol = 1,nrow = nrow(x))
+x = cbind(x,y)
+for (i in 1:nrow(x))
+{
+  x[i,6] = list[which(x[i,1] == list[,2]),1]
+}
+write.table(x,file="E:\\論文\\tpower\\2018_modify_index.csv",sep=",",row.names = F, na = "NA")
+#data = read.csv("E:\\論文\\tpower\\all_2018\\all_delete non-numeric and some col.csv")
+#y = as.matrix(levels(data[,4]))
+#as.numeric.factor <- function(x) {as.numeric(levels(x))[x]} #將factor轉換成numeric
+#p <- as.matrix(as.numeric.factor(data[,4]))
+#error = as.matrix(which(is.na(p[,1])))
+
+#x = matrix(0,nrow = nrow(error),ncol = 1)
+#for (i in 1:nrow(error))
+#{
+#tryCatch({
+#x[i] = as.numeric(paste(strsplit(as.character(data[which(is.na(p[,1]))[i],4]),",")[[1]],collapse=""))
+#}, error=function(e){})
+#}
+#which(is.na(x))
+
+#data[,4] = as.character(data[,4])
+
+#for (i in 1:nrow(error))
+#{
+#tryCatch({
+#data[which(is.na(p[,1]))[i],4] = as.numeric(paste(strsplit(as.character(data[which(is.na(p[,1]))[i],4]),",")[[1]],collapse=""))
+#}, error=function(e){})
+#}
+#data[,4] = as.factor(data[,4])
+#p <- as.matrix(as.numeric.factor(data[,4]))
+#error = as.matrix(which(is.na(p[,1])))
+#test = data[231114,]
+#data = data[-231114,]
+#write.table(data,file="E:\\論文\\tpower\\all_2018\\all_delete non-numeric and some col.csv",sep=",",row.names = F, na = "NA")
+#data = read.csv("E:\\論文\\tpower\\all_2018\\all_delete non-numeric and some col.csv")
+#class(data[,4])
+```
+
+type
+#2016
+```{r}
+data = read.csv("E:\\論文\\tpower\\2016_modify_index.csv")
+x = as.matrix(unique(data[,2]))
+y = data[which(data[,2] == x[1,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\Coal.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[2,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\Diesel.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[3,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\Gas.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[4,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\Hydro.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[5,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\IPPCoal.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[6,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\IPPgas.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[7,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\Nuclear.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[8,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\Oil.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[9,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\PumpStorage.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[10,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\PumpStorageGen.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[11,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\PV.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[12,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2016\\Wind.csv",sep=",",row.names = F, na = "NA")
+```
+
+#2017、2018
+```{r}
+data = read.csv("E:\\論文\\tpower\\all_2018\\all_delete non-numeric and some col.csv")
+x = as.matrix(unique(data[,2]))
+y = data[which(data[,2] == x[1,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\Coal.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[2,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\Diesel.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[3,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\Gas.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[4,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\Hydro.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[5,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\IPPCoal.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[6,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\IPPgas.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[7,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\Nuclear.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[8,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\Oil.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[9,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\PumpStorage.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[10,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\PumpStorageGen.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[11,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\PV.csv",sep=",",row.names = F, na = "NA")
+y = data[which(data[,2] == x[12,1]),]
+write.table(y,file="E:\\論文\\tpower\\all_2018\\Wind.csv",sep=",",row.names = F, na = "NA")
+```
+
+Master list
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/tpower/all_2016', pattern="*.csv",full.names = T))
+data1 = as.matrix(list.files( path = 'E:/論文/tpower/all_2016', pattern="*.csv"))
+
+a = "read.csv('"
+b = "', check.names = FALSE,header = T)"
+
+d = "write.table(zz1,file='"
+e = "',sep=',',row.names=F, na = 'NA')"
+
+f = as.matrix(substring(data[,1],1,13))[1]
+
+
+for (t in 1:nrow(data))
+{
+x = as.matrix(data[t,1])
+c = as.matrix(paste0(a,x,b))
+
+z = parse(text = c)
+z = eval(z)
+
+k = as.matrix(substring(data1[,1],1,nchar(as.character(data1[,1]))-4))[t]
+kk = substring(z[1,1],1,4)
+h = paste0(kk,"/",k,"/North/")
+z1 = z[which(z[,5] == "North"),]
+z1[,3] = as.character(z1[,3])
+z2 = unique(z1[,3])
+
+for (i in 1:length(z2))
+{
+zz1 = z1[which(z1[,3] == z2[i]),]
+
+g = paste0(z2[i],".csv")
+j = as.matrix(paste0(f,h,g))
+l = as.matrix(paste0(d,j,e))
+
+zz = parse(text = l)
+eval(zz)
+}
+}
+```
+
+find NA file
+```{r}
+x = as.matrix(list.files( path = 'E:/論文/tpower/2016', pattern="*.csv",full.names = T, recursive = T))
+y = as.matrix(substring(x[,1],nchar(as.character(x[,1]))-5,nchar(as.character(x[,1]))))
+z = as.matrix(x[which(y[,1] == "NA.csv"),])
+```
+
+delete redundant col
+```{r}
+#x = as.matrix(list.files( path = 'E:/論文/tpower/delete redundant col/2016', pattern="*.csv",full.names = T, recursive = T))
+#sapply(x, unlink)
+x = as.matrix(list.files( path = 'E:/論文/tpower/2016', pattern="*.csv",full.names = T, recursive = T))
+y = function(z){
+read.csv( z, stringsAsFactors = FALSE,header = T)
+}
+all.data = lapply(x, y)
+all.data2 = all.data
+
+for (i in 1:length(x))
+{
+all.data2[[i]] = all.data2[[i]][,c(6,1,4)]
+}
+
+a =  as.matrix(substring(x[,1],1,13))
+b =  as.matrix(substring(x[,1],14,nchar(as.character(x[,1]))))
+c = "delete redundant col/"  
+d = as.matrix(paste0(a,c,b))
+
+for (i in 1:length(x))  
+{
+e = function(f){
+write.table( all.data2[[i]] , f ,sep=",",row.names=F, na = "NA")
+}  
+
+lapply(d[i,],e)
+}
+```
+
+time list
+```{r}
+list = read.csv("E:\\論文\\tpower\\time_gap.csv",header = F)
+list2016 = list[,c(8,9)]
+list2017 = list[,c(8,10)]
+list2018 = list[,c(8,11)]
+x = matrix(NA,ncol = 1,nrow = nrow(list))
+list2016 = cbind(list2016,x)
+list2017 = cbind(list2017,x)
+list2018 = cbind(list2018,x)
+colnames(list2016) = c("list","time","value")
+colnames(list2017) = c("list","time","value")
+colnames(list2018) = c("list","time","value")
+
+x = as.matrix(list.files( path = 'E:/論文/tpower/delete redundant col/2018', pattern="*.csv",full.names = T, recursive = T))
+y = function(z){
+  read.csv( z, stringsAsFactors = FALSE,header = T)
+}
+all.data = lapply(x, y)
+all.data2 = all.data
+yy = all.data2[[1]]
+xx = as.list(matrix(NA,nrow = length(x),ncol = 1))
+
+for (t in 1:length(x))
+{
+list = list2018
+for (i in 1:nrow(list))
+{
+tryCatch({
+list[i,3] = all.data2[[t]][which(all.data2[[t]][,1] == i),3]
+}, error=function(e){})
+}
+xx[[t]] = list
+}
+
+a =  as.matrix(substring(x[,1],1,13))
+b =  as.matrix(substring(x[,1],34,nchar(as.character(x[,1]))))
+c = "time list"  
+d = as.matrix(paste0(a,c,b))
+
+for (i in 1:length(x))  
+{
+  e = function(f){
+    write.table( xx[[i]] , f ,sep=",",row.names=F, na = "NA")
+  }  
+  
+  lapply(d[i,],e)
+}
+```
+
+colbind
+```{r}
+x = as.matrix(list.files( path = 'E:/論文/tpower/time list', pattern="*.csv",full.names = T, recursive = T))
+y = strsplit(x, "/")
+z = matrix(NA,ncol = 1,nrow = nrow(x))
+for (i in 1:length(z))
+{
+z[i] = nchar(y[[i]][length(y[[i]])])
+}
+xx = as.matrix(substring(x,1,nchar(as.character(x))-(z+1)))
+yy = unique(xx)
+
+for (i in 1:length(yy))
+{
+a = as.matrix(list.files( path = yy[i], pattern="*.csv",full.names = T, recursive = T))
+b = function(c){
+  read.csv( c, stringsAsFactors = FALSE,header = T)
+}
+all.data = lapply(a, b)
+all.data2 = all.data
+
+tryCatch({
+for (t in 2:length(all.data2))
+{
+if(t==1){ break }
+all.data2[[t]] = all.data2[[t]][,3]
+}
+}, error=function(e){})
+
+d = do.call(cbind,all.data2)
+e = substring(a,nchar(yy)[i]+2,nchar(a)-4)
+colnames(d)[3:ncol(d)] = e
+f = "E:/論文/tpower/total小表/"
+g = substring(yy,24,nchar(yy))[i]
+h = paste(strsplit(g, "/")[[1]][1], strsplit(g, "/")[[1]][2],strsplit(g, "/")[[1]][3],sep = "_")
+j = paste0(f,h,".csv")
+write.table(d,file = j,sep=",",row.names=F, na = "NA")
+}
+```
+
+delete no exist time
+```{r}
+#1
+data = as.matrix(list.files( path = 'E:/論文/tpower/total小表', pattern="*.csv",full.names = T, recursive = T))
+data = as.matrix(data[which(substring(data,22,25) == "2018"),])
+a = function(b){
+read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+#all.data2 = all.data
+list = 1:8928
+x = as.list(matrix(NA,nrow = length(all.data),ncol = 1))
+
+c = as.matrix(substring(data,1,13)) 
+d = "total小表調整時間"
+e = as.matrix(substring(data,21,nchar(as.character(data))))
+f = as.matrix(paste0(c,d,e))
+
+for (i in 1:length(all.data))
+{
+y = as.data.frame(substring(all.data[[i]]$time,1,10))
+y = cbind(list,y)
+y1 = as.data.frame(y[which(y[,2] == '2018-02-29'),])
+y2 = as.data.frame(y[which(y[,2] == '2018-02-30'),])
+y3 = as.data.frame(y[which(y[,2] == '2018-02-31'),])
+y4 = as.data.frame(y[which(y[,2] == '2018-04-31'),])
+y5 = as.data.frame(y[which(y[,2] == '2018-06-31'),])
+y6 = as.data.frame(y[which(y[,2] == '2018-09-31'),])
+y7 = as.data.frame(y[which(y[,2] == '2018-11-31'),])
+
+test = rbind(as.matrix(y1[,1]),as.matrix(y2[,1]),as.matrix(y3[,1]),as.matrix(y4[,1]),as.matrix(y5[,1]),as.matrix(y6[,1]),
+             as.matrix(y7[,1])) 
+adjust = all.data[[i]][-test,]
+z = 1:(8928-168)
+adjust = cbind(z,adjust)
+colnames(adjust)[1] = "adjust"
+x[[i]] = adjust
+}
+
+for (t in 1:length(all.data))  
+{
+  g = function(h){
+    write.table( x[[t]] , h ,sep=",",row.names=F, na = "NA")
+  }  
+  
+  lapply(f[t],g)
+}
+
+#z = do.call(rbind,lhudata)
+
+
+
+#2 2016 nrow = 8496
+data = as.matrix(list.files( path = 'E:/論文/tpower/total小表調整時間2', pattern="*.csv",full.names = T, recursive = T))
+data = as.matrix(data[which(substring(data,27,30) == "2016"),])
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+output = as.list(matrix(NA,ncol = 1,nrow = length(data)))
+
+for( i in 1:length(data))
+{
+x = all.data[[i]]
+y = as.data.frame(substring(x$time,1,10))
+list = 1:nrow(x)
+y = cbind(list,y)
+y1 = as.data.frame(y[which(y[,2] == '2016-05-19'),])
+y2 = as.data.frame(y[which(y[,2] == '2016-05-27'),])
+y3 = as.data.frame(y[which(y[,2] == '2016-06-16'),])
+y4 = as.data.frame(y[which(y[,2] == '2016-06-20'),])
+y5 = as.data.frame(y[which(y[,2] == '2016-06-21'),])
+y6 = as.data.frame(y[which(y[,2] == '2016-06-25'),])
+y7 = as.data.frame(y[which(y[,2] == '2016-08-29'),])
+y8 = as.data.frame(y[which(y[,2] == '2016-08-31'),])
+y9 = as.data.frame(y[which(y[,2] == '2016-09-22'),])
+y10 = as.data.frame(y[which(y[,2] == '2016-09-23'),])
+y11 = as.data.frame(y[which(y[,2] == '2016-09-29'),])
+
+test = rbind(as.matrix(y1[,1]),as.matrix(y2[,1]),as.matrix(y3[,1]),as.matrix(y4[,1]),as.matrix(y5[,1]),as.matrix(y6[,1]),
+             as.matrix(y7[,1]),as.matrix(y8[,1]),as.matrix(y9[,1]),as.matrix(y10[,1]),as.matrix(y11[,1])) 
+
+adjust = x[-test,]
+z = 1:(nrow(x)-11*24)
+adjust = cbind(z,adjust)
+colnames(adjust)[1] = "adjust2"
+output[[i]] = adjust
+}
+
+for (t in 1:length(data))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(data[t],c)
+}
+```
+
+NA = 0
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/tpower/total小表調整時間2', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+output = as.list(matrix(NA,ncol = 1,nrow = length(data)))
+local = as.matrix(substring(data,1,13))
+local2 = "NA = 0"
+local3 = as.matrix(substring(data,26,nchar(data)))
+local = as.matrix(paste0(local,local2,local3))
+
+for(t in 1:length(data))
+{
+x = all.data[[t]]
+
+for(i in 1:ncol(x))
+{
+x[which(is.na(x[,i])),i] = 0
+if(sum(is.na(x[,i])) != 0){ stop("error") }
+}
+output[[t]] = x
+
+}
+
+for (t in 1:length(data))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(local[t],c)
+}
+```
+
+sum all site
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/tpower/NA = 0', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+output = as.list(matrix(NA,ncol = 1,nrow = nrow(data)))
+local = substring(data,1,13)
+local2 = "sum all site/"
+local3 = substring(data,21,nchar(data))
+local = as.matrix(paste0(local,local2,local3))
+
+#2016
+for(t in 1:31)
+{
+x = all.data[[t]]
+y = matrix( NA , nrow = nrow(x), ncol = 1)
+
+for(i in 1:nrow(x))
+{
+y[i,1] = sum(x[i,5:ncol(x)])
+}
+y = cbind(x[,1:4],y)
+colnames(y)[5] = substring(data[t],21,nchar(data[t])-4)
+output[[t]] = y
+
+}
+
+#2017、2018
+for(t in 32:nrow(data))
+{
+  x = all.data[[t]]
+  y = matrix( NA , nrow = nrow(x), ncol = 1)
+  
+  for(i in 1:nrow(x))
+  {
+    y[i] = sum(x[i,4:ncol(x)])
+  }
+  y = cbind(x[,1:3],y)
+  colnames(y)[4] = substring(data[t],21,nchar(data[t])-4)
+  output[[t]] = y
+  
+}
+
+for (t in 1:length(output))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(local[t],c)
+}
+```
+
+merge different type
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/tpower/sum all site', pattern="*.csv",full.names = T, recursive = T))
+big_list = as.data.frame(matrix(NA,ncol = (4+12),nrow = (8496+8760*2)))
+colnames = as.matrix(list.dirs( path = 'E:/論文/tpower/2016',full.names = F, recursive = F))
+
+#North
+data_North = as.matrix(data[which(substring(data[,1],(nchar(data)-8),(nchar(data)-4)) == "North"),])
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data_North, a)
+x = big_list
+x[1:8496,1:4] = all.data[[1]][,1:4]
+x[(1+8496):(8496+8760),2:4] = all.data[[which(substring(data_North,27,30) == 2017)[1]]][,1:3]
+x[(1+8496+8760):(8496+8760+8760),2:4] = all.data[[which(substring(data_North,27,30) == 2018)[1]]][,1:3]
+colnames(x)[1:4] = colnames(all.data[[1]][,1:4])
+y = paste0(colnames,"_North")
+colnames(x)[5:ncol(x)] = y
+#test = all.data[[1]]
+
+for(i in which(substring(data_North,27,30) == 2016))
+{
+type = substring(colnames(all.data[[i]])[5],6,nchar(colnames(all.data[[i]])[5]))
+
+if(type == "Coal_North"){z = 5}
+if(type == "Diesel_North"){z = 6}
+if(type == "Gas_North"){z = 7}
+if(type == "Hydro_North"){z = 8}
+if(type == "IPPCoal_North"){z = 9}
+if(type == "IPPgas_North"){z = 10}
+if(type == "Nuclear_North"){z = 11}
+if(type == "Oil_North"){z = 12}
+if(type == "PumpStorage_North"){z = 13}
+if(type == "PumpStorageGen_Northl"){z = 14}
+if(type == "PV_North"){z = 15}
+if(type == "Wind_North"){z = 16}
+
+x[1:8496,z] = all.data[[i]][5]
+}
+
+for(i in which(substring(data_North,27,30) == 2017))
+{
+  type = substring(colnames(all.data[[i]])[4],6,nchar(colnames(all.data[[i]])[4]))
+  
+  if(type == "Coal_North"){z = 5}
+  if(type == "Diesel_North"){z = 6}
+  if(type == "Gas_North"){z = 7}
+  if(type == "Hydro_North"){z = 8}
+  if(type == "IPPCoal_North"){z = 9}
+  if(type == "IPPgas_North"){z = 10}
+  if(type == "Nuclear_North"){z = 11}
+  if(type == "Oil_North"){z = 12}
+  if(type == "PumpStorage_North"){z = 13}
+  if(type == "PumpStorageGen_North"){z = 14}
+  if(type == "PV_North"){z = 15}
+  if(type == "Wind_North"){z = 16}
+  
+  x[(1+8496):(8496+8760),z] = all.data[[i]][4]
+}
+
+for(i in which(substring(data_North,27,30) == 2018))
+{
+  type = substring(colnames(all.data[[i]])[4],6,nchar(colnames(all.data[[i]])[4]))
+  
+  if(type == "Coal_North"){z = 5}
+  if(type == "Diesel_North"){z = 6}
+  if(type == "Gas_North"){z = 7}
+  if(type == "Hydro_North"){z = 8}
+  if(type == "IPPCoal_North"){z = 9}
+  if(type == "IPPgas_North"){z = 10}
+  if(type == "Nuclear_North"){z = 11}
+  if(type == "Oil_North"){z = 12}
+  if(type == "PumpStorage_North"){z = 13}
+  if(type == "PumpStorageGen_Northl"){z = 14}
+  if(type == "PV_North"){z = 15}
+  if(type == "Wind_North"){z = 16}
+  
+  x[(1+8496+8760):(8496+8760+8760),z] = all.data[[i]][4]
+}
+
+for(i in 1:ncol(x))
+{
+x[which(is.na(x[,i])),i] = 0
+}
+
+write.table(x,file="E:/論文/tpower/merge different type/North.csv",sep=",",row.names = F, na = "NA")
+```
+
+
+
+
+
+meteorological
+add dir
+```{r}
+data = as.matrix(list.files( path = 'E:\\論文\\meteorological', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+for (i in 1:length(all.data))
+{
+colnames(all.data[[i]]) = c(1:27)
+}
+x = all.data %>% do.call(rbind, .)
+#y = as.matrix(unique(x[,3]))
+y = unique(x[,3])
+#write.table(y,file = "E:\\論文\\meteorological\\classification.csv",sep=",",row.names=F, na = "NA",col.names = F)
+setwd("E:\\論文\\meteorological\\classification\\2016")
+for (i in 1:length(y))
+{
+dir.create(y[i], recursive = TRUE)
+}
+data = as.matrix(list.dirs( path = 'E:/論文/meteorological/classification/2016',full.names = T, recursive = T))
+data = as.matrix(data[-1])
+for (i in 1:length(data))
+{
+setwd(data[i])
+dir.create("North")
+dir.create("Hsinchu")
+dir.create("Central")
+dir.create("Chiayi")
+dir.create("Kaohsiung")
+}
+```
+
+Master list
+```{r}
+classification = read.delim("E:\\論文\\meteorological\\classification.csv", header = F,sep="")
+data = as.matrix(list.files( path = 'E:/論文/meteorological/all_2016', pattern="*.csv", full.names = T, recursive = T))
+data1 = do.call(rbind,strsplit(data, "/"))[,5]
+data2 = as.matrix(nchar(data1))
+x = unique(substring(data,31,31+data2-1))
+
+archive = as.matrix(list.dirs( path = 'E:/論文/meteorological/classification/2016',full.names = T, recursive = T)[-1])
+seq = seq(from = 1, to = length(archive), by = 6)
+archive2 = as.matrix(archive[-seq])
+
+for (i in 1:length(x)) 
+{
+y = as.matrix(data[which(substring(data,31,31+data2-1) == x[i])])
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(y, a)
+
+
+for (t in 1:length(all.data))
+{
+table = all.data[[t]]
+
+
+for (s in 1:nrow(classification))
+{
+item = table[which(table[,3] == classification[s,1]),]
+if(nrow(item) == 0){ break }
+archive3 = archive2[which(do.call(rbind,strsplit(archive2 , "/"))[,6] == classification[s,1] & 
+                   do.call(rbind,strsplit(archive2 , "/"))[,7] == x[i])]
+archive4 = do.call(rbind,strsplit(y, "/"))[,6][t]
+archive5 = paste0(substring(archive4,1,nchar(archive4)-13),substring(archive4,nchar(archive4)-3,nchar(archive4)))
+archive6 = as.matrix(paste(archive3,archive5,sep = "/"))
+
+g = function(h){
+write.table( item , h ,sep=",",row.names=F, na = "NA")
+}
+lapply(archive6,g)
+
+}
+}
+}
+#data = as.matrix(list.files( path = 'E:\\論文\\meteorological\\classification\\2016', pattern="*.csv", full.names = T, recursive = T))
+#sapply(data, unlink)
+```
+
+time list
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/classification', pattern="*.csv", full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+all_file = as.list(matrix(NA,ncol = 1,nrow = length(data)))
+
+e = strsplit(data,"/")
+colnames = matrix(NA,ncol = 1,nrow = length(data))
+
+for (i in 1:length(data))
+{
+colnames[i] = substring(e[[i]][8],1,nchar(e[[i]][8])-4)
+}
+
+for (s in 1:length(data))
+{
+  e[[s]][4] = "time list"
+  e[[s]] = paste(e[[s]][1],e[[s]][2],e[[s]][3],e[[s]][4],e[[s]][5],e[[s]][6],e[[s]][7],e[[s]][8],sep = "/")
+}
+
+
+for (t in 1:length(data))
+{
+x = all.data[[t]]
+y = t(x)
+y = as.matrix(y[-(2:3),])
+
+time = strsplit(y[1,],"/")
+c = function(d){
+  paste( d[1],d[2],d[3],sep = "-")
+}
+all.time = lapply(time, c)
+y[1,] = do.call(cbind,all.time)
+
+file = as.list(matrix(NA,ncol = 1,nrow = ncol(y)))
+list = matrix(NA,ncol = 1,nrow = 25)
+
+for (i in 1:ncol(y))
+{
+one = cbind(list,y[,i])
+one[,1] = paste(one[1,2],row.names(one)," ")
+one = as.data.frame(one[-1,])
+colnames(one)[1] = "time"
+colnames(one)[2] = colnames[t]
+row.names(one) = NULL
+file[[i]] = one
+}
+file = do.call(rbind,file)
+all_file[[t]] = file
+
+f = function(g){
+  write.table( all_file[[t]] , g ,sep=",",row.names=F, na = "NA")
+}
+lapply(e[[t]],f)
+
+}
+```
+
+all time list
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/time list', pattern="*.csv", full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+time_list = read.delim("E:\\論文\\meteorological\\time_gap.csv", header = F,sep=",")
+list_2016 = time_list[,8:9]
+list_2017 = time_list[,c(8,10)]
+list_2018 = time_list[,c(8,11)]
+e = strsplit(data,"/")
+
+for (s in 1:length(data))
+{
+  e[[s]][4] = "all time list"
+  e[[s]] = paste(e[[s]][1],e[[s]][2],e[[s]][3],e[[s]][4],e[[s]][5],e[[s]][6],e[[s]][7],e[[s]][8],sep = "/")
+}
+
+
+for (t in 2225:length(all.data))
+{
+x = all.data[[t]]
+list = matrix(NA,ncol = 1,nrow = nrow(x))
+x = cbind(x,list)
+x[,1] = substring(x[,1],1,13)
+
+for (i in 1:nrow(x))
+{
+  x[i,3] = list_2018[which(x[i,1] == list_2018[,2]),1]
+}
+
+output = as.list(matrix(NA,ncol = 1,nrow = length(all.data)))
+output[[t]] = x
+#test = output[[1]]
+
+c = function(d){
+  write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+}
+lapply(e[[t]],c)
+
+}
+
+
+
+#error time list
+data = as.matrix(list.files( path = 'E:/論文/meteorological/time list', pattern="*.csv", full.names = T, recursive = T))
+e = strsplit(data,"/")
+x = matrix(NA,ncol = 1,nrow = length(data))
+for (s in 1:length(data))
+{
+  x[s] = e[[s]][8]
+}
+error = as.matrix(data[which(x[,1] == x[50]),])
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(error, a)
+good = as.list(matrix(NA,ncol = 1,nrow = length(all.data)))
+
+for(i in 1:length(all.data))
+{
+test = all.data[[i]]
+test[,1] = substring(test[,1],1,11)
+test1 = strsplit(test[,1],"-")
+test2 = do.call(rbind,test1)
+test3 = strsplit(test2[,3]," ")
+test4 = do.call(rbind,test3)
+test2 = cbind(test2[,1:2],test4)
+
+qq1 = as.matrix(as.numeric(test2[,1]))
+qq2 = as.matrix(as.numeric(test2[,2]))
+qq3 = as.matrix(as.numeric(test2[,3]))
+qq4 = as.matrix(as.numeric(test2[,4]))
+qq = cbind(qq1,qq2,qq3,qq4)
+
+qq[which(nchar(qq[,2]) == 1),2] = paste0(0,qq[which(nchar(qq[,2]) == 1),2])
+qq[which(nchar(qq[,3]) == 1),3] = paste0(0,qq[which(nchar(qq[,3]) == 1),3])
+qq[which(nchar(qq[,4]) == 1),4] = paste0(0,qq[which(nchar(qq[,4]) == 1),4])
+
+qqq = as.matrix(paste(qq[,1],qq[,2],qq[,3],sep = "-"))
+qqqq = as.matrix(paste(qqq,qq[,4],sep = " "))
+test[,1] = qqqq
+good[[i]] = test
+}
+
+for(t in 1:length(all.data))
+{
+c = function(d){
+  write.table( good[[t]] , d ,sep=",",row.names=F, na = "NA")
+}
+lapply(error[t],c)
+
+}
+```
+
+complete time list
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/all time list', pattern="*.csv", full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+time_list = read.delim("E:\\論文\\meteorological\\time_gap.csv", header = F,sep=",")
+list_2016 = time_list[,8:9]
+list_2017 = time_list[,c(8,10)]
+list_2018 = time_list[,c(8,11)]
+value = matrix(NA,ncol = 1,nrow = nrow(list_2018))
+colnames(list_2018) = c("list","time")
+output = as.list(matrix(NA,ncol = 1,nrow = length(all.data)))
+
+e = strsplit(data,"/")
+for (s in 1:length(data))
+{
+  e[[s]][4] = "complete time list"
+  e[[s]] = paste(e[[s]][1],e[[s]][2],e[[s]][3],e[[s]][4],e[[s]][5],e[[s]][6],e[[s]][7],e[[s]][8],sep = "/")
+}
+
+for (t in 2225:length(data))
+{
+x = all.data[[t]]
+colnames(value) = colnames(x)[2]
+list = cbind(list_2018,value)
+for (i in 1:nrow(list))
+{
+list[which(list[,1] == x[i,3]),3] = x[i,2]
+}
+output[[t]] = list
+}
+
+
+for(s in 2225:length(data))
+{
+  c = function(d){
+    write.table( output[[s]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(e[[s]],c)
+  
+}
+```
+
+colbind
+```{r}
+x = as.matrix(list.files( path = 'E:/論文/meteorological/complete time list', pattern="*.csv",full.names = T, recursive = T))
+y = strsplit(x, "/")
+z = matrix(NA,ncol = 1,nrow = nrow(x))
+for (i in 1:length(z))
+{
+  z[i] = nchar(y[[i]][length(y[[i]])])
+}
+xx = as.matrix(substring(x,1,nchar(as.character(x))-(z+1)))
+yy = unique(xx)
+
+for (i in 1:length(yy))
+{
+  a = as.matrix(list.files( path = yy[i], pattern="*.csv",full.names = T, recursive = T))
+  b = function(c){
+    read.csv( c, stringsAsFactors = FALSE,header = T)
+  }
+  all.data = lapply(a, b)
+  all.data2 = all.data
+  
+  tryCatch({
+    for (t in 2:length(all.data2))
+    {
+      if(t==1){ break }
+      all.data2[[t]] = all.data2[[t]][,3]
+    }
+  }, error=function(e){})
+  
+  d = do.call(cbind,all.data2)
+  e = substring(a,nchar(yy)[i]+2,nchar(a)-4)
+  colnames(d)[3:ncol(d)] = e
+  f = "E:/論文/meteorological/total小表/"
+  g = substring(yy,41,nchar(yy))[i]
+  h = paste(strsplit(g, "/")[[1]][1], strsplit(g, "/")[[1]][2],strsplit(g, "/")[[1]][3],sep = "_")
+  j = paste0(f,h,".csv")
+  write.table(d,file = j,sep=",",row.names=F, na = "NA")
+}
+```
+
+delete no exist time
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/total小表', pattern="*.csv",full.names = T, recursive = T))
+data = as.matrix(data[which(substring(data,30,33) == "2018"),])
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+#all.data2 = all.data
+list = 1:8928
+x = as.list(matrix(NA,nrow = length(all.data),ncol = 1))
+
+c = as.matrix(substring(data,1,21)) 
+d = "total小表調整時間"
+e = as.matrix(substring(data,29,nchar(as.character(data))))
+f = as.matrix(paste0(c,d,e))
+
+for (i in 1:length(all.data))
+{
+  y = as.data.frame(substring(all.data[[i]]$time,1,10))
+  y = cbind(list,y)
+  y1 = as.data.frame(y[which(y[,2] == '2018-02-29'),])
+  y2 = as.data.frame(y[which(y[,2] == '2018-02-30'),])
+  y3 = as.data.frame(y[which(y[,2] == '2018-02-31'),])
+  y4 = as.data.frame(y[which(y[,2] == '2018-04-31'),])
+  y5 = as.data.frame(y[which(y[,2] == '2018-06-31'),])
+  y6 = as.data.frame(y[which(y[,2] == '2018-09-31'),])
+  y7 = as.data.frame(y[which(y[,2] == '2018-11-31'),])
+  
+  test = rbind(as.matrix(y1[,1]),as.matrix(y2[,1]),as.matrix(y3[,1]),as.matrix(y4[,1]),as.matrix(y5[,1]),as.matrix(y6[,1]),
+               as.matrix(y7[,1])) 
+  adjust = all.data[[i]][-test,]
+  z = 1:(8928-168)
+  adjust = cbind(z,adjust)
+  colnames(adjust)[1] = "adjust"
+  x[[i]] = adjust
+}
+
+for (t in 1:length(all.data))  
+{
+  g = function(h){
+    write.table( x[[t]] , h ,sep=",",row.names=F, na = "NA")
+  }  
+  
+  lapply(f[t],g)
+}
+```
+
+parameter NR(rain)
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/parameter NR(rain)', pattern="*.csv",full.names = T, recursive = T))
+x = substring(data,41,nchar(data)-4)
+y = do.call(rbind,strsplit(x,"_"))
+z = matrix(1:nrow(y),ncol = 1)
+y = cbind(z,y)
+target = rbind(y[which(y[,3] == "RAINFALL"),c(1,3)],y[which(y[,3] == "PH"),c(1,3)],y[which(y[,3] == "RAIN"),c(1,3)])
+
+list = NA
+for(i in target[,1])
+{
+local = data[as.numeric(target[which(target[,1] == i),1])]
+list = rbind(list,local)
+}
+data = as.matrix(list[-1])
+
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+
+output = as.list(matrix(NA,ncol = 1,nrow = length(all.data)))
+
+for(t in 1:length(all.data))
+{
+x = all.data[[t]]
+
+for(i in 4:ncol(x))
+{
+x[which(x[,i] == "NR"),i] = 0
+}
+output[[t]] = x
+
+}
+
+for(t in 1:length(all.data))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(data[[t]],c)
+  
+}
+```
+
+character to numeric
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/parameter NR(rain)', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+as.numeric.factor <- function(x) {as.numeric(levels(x))[x]} #將factor轉換成numeric
+output = as.list(matrix(NA,ncol = 1,nrow = length(all.data)))
+
+for(t in 1:length(all.data))
+{
+x = all.data[[t]]
+
+for(i in 4:ncol(x))
+{
+y = as.factor(x[,i])
+p <- as.matrix(as.numeric.factor(y))
+error = as.matrix(which(is.na(p[,1])))
+x[error,i] = NA
+x[,i] = as.numeric(x[,i])
+if(class(x[,i]) != "numeric"){ stop("error") }
+}
+output[[t]] = x
+}
+
+local = substring(data,1,21)
+local2 = "total小表調整時間(文字處理)"
+local3 = substring(data,40,nchar(data))
+local = paste0(local,local2,local3)
+
+for (t in 1:length(all.data))
+{
+c = function(d){
+  write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+}
+lapply(local[t],c)
+}
+
+#x = factor(c(1,3,2,2,1,3,2,1,1,3,2),levels = c(3,2,1))
+#y = c(1,2,3)
+#z = c(3,2,1)
+#y[x]
+#z[x]
+#class(y[x])
+#class(z[x])
+```
+
+NA more than half is something wrong
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/total小表調整時間(文字處理)', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+
+x = matrix( NA , nrow = nrow(all.data[[1]]), ncol = 1)
+list = 1:nrow(all.data[[1]])
+list = cbind(list,x)
+output = as.list(matrix(NA,ncol = 1,nrow = length(all.data)))
+xx = matrix(NA,ncol = 1,nrow = length(all.data))
+
+for (t in 1:length(all.data))
+{
+x = list
+for (i in 1:nrow(all.data[[1]]))
+{
+x[i,2] = sum(is.na(all.data[[t]][i,]))
+}
+y = unique(x[,2])
+z = all.data[[t]][which(x[,2] > (ncol(all.data[[t]])-3)/2),]
+output[[t]] = z
+xx[t] = nrow(z)
+}
+
+xxx = matrix(1:length(xx),ncol = 1)
+xx = cbind(xxx,xx)
+data2 = as.matrix(xx[which(xx[,2] > 72),])
+
+test = output[[44]]
+test2 = all.data[[44]]
+test3 = as.matrix(data[data2[,1]])
+test4 = rbind(as.matrix(output[[44]][,3]),as.matrix(output[[58]][,3]),as.matrix(output[[81]][,3])
+              ,as.matrix(output[[145]][,3]),as.matrix(output[[159]][,3]),as.matrix(output[[182]][,3])
+              ,as.matrix(output[[246]][,3]),as.matrix(output[[260]][,3]))
+
+test5 = unique(test4)
+test6 = substring(test5,1,10)
+test7 = unique(test6)
+data3 = cbind(data2,test3)
+colnames(data3) = c("item","quantity","local")
+```
+
+delete no exist time --- 2(2016)
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/total小表調整時間2', pattern="*.csv",full.names = T, recursive = T))
+data = as.matrix(data[which(substring(data,35,38) == "2016"),])
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+output = as.list(matrix(NA,ncol = 1,nrow = length(data)))
+
+for( i in 1:length(data))
+{
+  x = all.data[[i]]
+  y = as.data.frame(substring(x$time,1,10))
+  list = 1:nrow(x)
+  y = cbind(list,y)
+  y1 = as.data.frame(y[which(y[,2] == '2016-05-19'),])
+  y2 = as.data.frame(y[which(y[,2] == '2016-05-27'),])
+  y3 = as.data.frame(y[which(y[,2] == '2016-06-16'),])
+  y4 = as.data.frame(y[which(y[,2] == '2016-06-20'),])
+  y5 = as.data.frame(y[which(y[,2] == '2016-06-21'),])
+  y6 = as.data.frame(y[which(y[,2] == '2016-06-25'),])
+  y7 = as.data.frame(y[which(y[,2] == '2016-08-29'),])
+  y8 = as.data.frame(y[which(y[,2] == '2016-08-31'),])
+  y9 = as.data.frame(y[which(y[,2] == '2016-09-22'),])
+  y10 = as.data.frame(y[which(y[,2] == '2016-09-23'),])
+  y11 = as.data.frame(y[which(y[,2] == '2016-09-29'),])
+  
+  test = rbind(as.matrix(y1[,1]),as.matrix(y2[,1]),as.matrix(y3[,1]),as.matrix(y4[,1]),as.matrix(y5[,1]),as.matrix(y6[,1]),
+               as.matrix(y7[,1]),as.matrix(y8[,1]),as.matrix(y9[,1]),as.matrix(y10[,1]),as.matrix(y11[,1])) 
+  
+  adjust = x[-test,]
+  z = 1:(nrow(x)-11*24)
+  adjust = cbind(z,adjust)
+  colnames(adjust)[1] = "adjust2"
+  output[[i]] = adjust
+}
+
+for (t in 1:length(data))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(data[t],c)
+}
+```
+
+wind adjust
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/meteorological/total小表調整時間2', pattern="*.csv",full.names = T, recursive = T))
+input = substring(data,1,34)[1]
+
+x = matrix(NA,ncol = 3,nrow = 30)
+x[1:10,1] = 2016
+x[11:20,1] = 2017
+x[21:30,1] = 2018
+
+for(i in seq(from = 1, to = 29, by=2))
+{
+x[i,2] = "WD_HR"
+}
+
+for(i in seq(from = 2, to = 30, by=2))
+{
+  x[i,2] = "WS_HR"
+}
+
+for(i in seq(from = 1, to = 30, by=10))
+{
+  x[i,3] = "North"
+}
+
+for(i in seq(from = 2, to = 30, by=10))
+{
+  x[i,3] = "North"
+}
+
+for(i in seq(from = 3, to = 30, by=10))
+{
+  x[i,3] = "Hsinchu"
+}
+
+for(i in seq(from = 4, to = 30, by=10))
+{
+  x[i,3] = "Hsinchu"
+}
+
+for(i in seq(from = 5, to = 30, by=10))
+{
+  x[i,3] = "Central"
+}
+
+for(i in seq(from = 6, to = 30, by=10))
+{
+  x[i,3] = "Central"
+}
+
+for(i in seq(from = 7, to = 30, by=10))
+{
+  x[i,3] = "Chiayi"
+}
+
+for(i in seq(from = 8, to = 30, by=10))
+{
+  x[i,3] = "Chiayi"
+}
+
+for(i in seq(from = 9, to = 30, by=10))
+{
+  x[i,3] = "Kaohsiung"
+}
+
+for(i in seq(from = 10, to = 30, by=10))
+{
+  x[i,3] = "Kaohsiung"
+}
+
+x = paste(x[,1],x[,2],x[,3],sep = "_")
+x = paste0(input,x,".csv")
+data = as.matrix(x)
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+
+data = cbind(data,sort(union(seq(from = 1, to = 45, by = 3),seq(from = 2, to = 45, by = 3))))
+data2 = data
+data2[,1] = substring(data2[,1],35,nchar(data2[,1]))
+
+output = as.list(matrix(NA,ncol = 1,nrow = length(all.data)*1.5))
+local = matrix(NA,ncol = 4,nrow = length(all.data)*1.5)
+local[,1] = 1:(length(all.data)*1.5)
+local[,2] = substring(data,1,21)[1]
+local[,3] = "wind adjust/"
+
+for(i in 1:nrow(data2))
+{
+local[which(data2[i,2] == local[,1]),4] = data2[i,1]
+}
+
+for(i in seq(from = 3, to = nrow(local), by = 3))
+{
+local[i,4] = local[i-1,4]
+}
+
+local2 = local
+local2[,4] = paste(substring(local2[,4],1,4),c("Absolute","cos","sin"),substring(local2[,4],12,nchar(local2[,4])),sep = "_")
+local = as.matrix(paste0(local2[,2],local2[,3],local2[,4]))
+
+for(i in 1:((length(output)/3)/3))
+{
+x = all.data[[2*i-1]]
+y = all.data[[2*i]]
+
+Absolute = y
+cos = cbind(x[,1:4],round(cos(x[,5:ncol(x)]*pi/180)*y[,5:ncol(x)],3))
+sin = cbind(x[,1:4],round(sin(x[,5:ncol(x)]*pi/180)*y[,5:ncol(x)],3))
+output[[3*i-2]] = Absolute
+output[[3*i-1]] = cos 
+output[[3*i]] = sin 
+#cos(x[,5:ncol(x)]*pi/180)
+#options(scipen=99)
+}
+
+for(i in (((length(output)/3)/3)+1):(length(output)/3))
+{
+  x = all.data[[2*i-1]]
+  y = all.data[[2*i]]
+  
+  Absolute = y
+  cos = cbind(x[,1:3],round(cos(x[,4:ncol(x)]*pi/180)*y[,4:ncol(x)],3))
+  sin = cbind(x[,1:3],round(sin(x[,4:ncol(x)]*pi/180)*y[,4:ncol(x)],3))
+  output[[3*i-2]] = Absolute
+  output[[3*i-1]] = cos 
+  output[[3*i]] = sin 
+  #cos(x[,5:ncol(x)]*pi/180)
+  #options(scipen=99)
+}
+
+for (t in 1:length(local))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(local[t],c)
+}
+```
+
+sum all site
+```{r}
+#total小表調整時間2
+data = as.matrix(list.files( path = 'E:/論文/meteorological/total小表調整時間2', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+output = as.list(matrix(NA,ncol = 1,nrow = nrow(data)))
+local = substring(data,1,21)
+local2 = "sum all site/"
+local3 = substring(data,35,nchar(data))
+local = as.matrix(paste0(local,local2,local3))
+
+#2016
+for(t in 1:101)
+{
+  x = all.data[[t]]
+  y = matrix( NA , nrow = nrow(x), ncol = 1)
+  
+  for(i in 1:nrow(x))
+  {
+    y[i,1] = mean(as.numeric(x[i,5:ncol(x)]),na.rm = T)
+  }
+  y = cbind(x[,1:4],y)
+  colnames(y)[5] = substring(data[t],35,nchar(data[t])-4)
+  output[[t]] = y
+  
+}
+
+#2017、2018
+for(t in 102:nrow(data))
+{
+  x = all.data[[t]]
+  y = matrix( NA , nrow = nrow(x), ncol = 1)
+  
+  for(i in 1:nrow(x))
+  {
+    y[i,1] = mean(as.numeric(x[i,4:ncol(x)]),na.rm = T)
+  }
+  y = cbind(x[,1:3],y)
+  colnames(y)[4] = substring(data[t],35,nchar(data[t])-4)
+  output[[t]] = y
+  
+}
+
+for (t in 1:length(output))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(local[t],c)
+}
+
+
+
+#wind adjust
+data = as.matrix(list.files( path = 'E:/論文/meteorological/wind adjust', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+output = as.list(matrix(NA,ncol = 1,nrow = nrow(data)))
+local = substring(data,1,21)
+local2 = "sum all site/"
+local3 = substring(data,34,nchar(data))
+local = as.matrix(paste0(local,local2,local3))
+
+#2016
+for(t in 1:15)
+{
+  x = all.data[[t]]
+  y = matrix( NA , nrow = nrow(x), ncol = 1)
+  
+  for(i in 1:nrow(x))
+  {
+    y[i,1] = mean(as.numeric(x[i,5:ncol(x)]),na.rm = T)
+  }
+  y = cbind(x[,1:4],y)
+  colnames(y)[5] = substring(data[t],34,nchar(data[t])-4)
+  output[[t]] = y
+  
+}
+
+#2017、2018
+for(t in 16:nrow(data))
+{
+  x = all.data[[t]]
+  y = matrix( NA , nrow = nrow(x), ncol = 1)
+  
+  for(i in 1:nrow(x))
+  {
+    y[i,1] = mean(as.numeric(x[i,4:ncol(x)]),na.rm = T)
+  }
+  y = cbind(x[,1:3],y)
+  colnames(y)[4] = substring(data[t],34,nchar(data[t])-4)
+  output[[t]] = y
+  
+}
+
+for (t in 1:length(output))
+{
+  c = function(d){
+    write.table( output[[t]] , d ,sep=",",row.names=F, na = "NA")
+  }
+  lapply(local[t],c)
+}
+```
+
+merge different type
+```{r}
+#meteorological
+x = matrix(NA,ncol = 5,nrow = 21+3)
+x[,1] = "if(type == \""
+y = as.matrix(list.dirs( path = 'E:/論文/meteorological/all time list/2016',full.names = F, recursive = F))
+x[1:21,2] = y
+x[22,2] = "Absolute"
+x[23,2] = "cos"
+x[24,2] = "sin"
+x[,3] = "_North\"){z = "
+x[,4] = 5:28
+x[,5] = "}"
+list = as.matrix(paste0(x[,1],x[,2],x[,3],x[,4],x[,5]))
+
+data = as.matrix(list.files( path = 'E:/論文/meteorological/sum all site', pattern="*.csv",full.names = T, recursive = T))
+big_list = as.data.frame(matrix(NA,ncol = (4+21+3),nrow = (8496+8760*2)))
+colnames = list.dirs( path = 'E:/論文/meteorological/all time list/2016',full.names = F, recursive = F)
+colnames[22] = "Absolute"
+colnames[23] = "cos"
+colnames[24] = "sin"
+colnames = as.matrix(colnames)
+
+#North
+data_North = as.matrix(data[which(substring(data[,1],(nchar(data)-8),(nchar(data)-4)) == "North"),])
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data_North, a)
+x = big_list
+x[1:8496,1:4] = all.data[[which(substring(data_North,35,38) == 2016)[1]]][,1:4]
+x[(1+8496):(8496+8760),2:4] = all.data[[which(substring(data_North,35,38) == 2017)[1]]][,1:3]
+x[(1+8496+8760):(8496+8760+8760),2:4] = all.data[[which(substring(data_North,35,38) == 2018)[1]]][,1:3]
+colnames(x)[1:4] = colnames(all.data[[which(substring(data_North,35,38) == 2016)[1]]][,1:4])
+y = paste0(colnames,"_North")
+colnames(x)[5:ncol(x)] = y
+
+for(i in which(substring(data_North,35,38) == 2016))
+{
+  type = substring(colnames(all.data[[i]])[5],6,nchar(colnames(all.data[[i]])[5]))
+  
+  for(t in 1:24)
+  {
+    z = eval(parse(text = list[t]))
+    if(is.null(z) == FALSE){ break }
+  }
+  
+  x[1:8496,z] = all.data[[i]][5]
+}
+
+for(i in which(substring(data_North,35,38) == 2017))
+{
+  type = substring(colnames(all.data[[i]])[4],6,nchar(colnames(all.data[[i]])[4]))
+  
+  for(t in 1:24)
+  {
+    z = eval(parse(text = list[t]))
+    if(is.null(z) == FALSE){ break }
+  }
+  
+  x[(1+8496):(8496+8760),z] = all.data[[i]][4]
+}
+
+for(i in which(substring(data_North,35,38) == 2018))
+{
+  type = substring(colnames(all.data[[i]])[4],6,nchar(colnames(all.data[[i]])[4]))
+  
+  for(t in 1:24)
+  {
+    z = eval(parse(text = list[t]))
+    if(is.null(z) == FALSE){ break }
+  }
+  
+  x[(1+8496+8760):(8496+8760+8760),z] = all.data[[i]][4]
+}
+
+for(i in 1:ncol(x))
+{
+  x[which(is.na(x[,i])),i] = 0
+}
+
+write.table(x,file="E:/論文/meteorological/merge different type/North.csv",sep=",",row.names = F, na = "NA")
+
+
+
+#Other area
+area = "
+x = matrix(NA,ncol = 5,nrow = 21+3)
+x[,1] = \"if(type == \\\"\"
+y = as.matrix(list.dirs( path = 'E:/論文/meteorological/all time list/2016',full.names = F, recursive = F))
+x[1:21,2] = y
+x[22,2] = \"Absolute\"
+x[23,2] = \"cos\"
+x[24,2] = \"sin\"
+x[,3] = \"_North\\\"){z = \"
+x[,4] = 5:28
+x[,5] = \"}\"
+list = as.matrix(paste0(x[,1],x[,2],x[,3],x[,4],x[,5]))
+
+data = as.matrix(list.files( path = 'E:/論文/meteorological/sum all site', pattern=\"*.csv\",full.names = T, recursive = T))
+big_list = as.data.frame(matrix(NA,ncol = (4+21+3),nrow = (8496+8760*2)))
+colnames = list.dirs( path = 'E:/論文/meteorological/all time list/2016',full.names = F, recursive = F)
+colnames[22] = \"Absolute\"
+colnames[23] = \"cos\"
+colnames[24] = \"sin\"
+colnames = as.matrix(colnames)
+
+#North
+data_North = as.matrix(data[which(substring(data[,1],(nchar(data)-10),(nchar(data)-4)) == \"North\"),])
+#different area change the above nchar
+
+
+a = function(b){
+read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data_North, a)
+x = big_list
+x[1:8496,1:4] = all.data[[which(substring(data_North,35,38) == 2016)[1]]][,1:4]
+x[(1+8496):(8496+8760),2:4] = all.data[[which(substring(data_North,35,38) == 2017)[1]]][,1:3]
+x[(1+8496+8760):(8496+8760+8760),2:4] = all.data[[which(substring(data_North,35,38) == 2018)[1]]][,1:3]
+colnames(x)[1:4] = colnames(all.data[[which(substring(data_North,35,38) == 2016)[1]]][,1:4])
+y = paste0(colnames,\"_North\")
+colnames(x)[5:ncol(x)] = y
+
+for(i in which(substring(data_North,35,38) == 2016))
+{
+  type = substring(colnames(all.data[[i]])[5],6,nchar(colnames(all.data[[i]])[5]))
+  
+  for(t in 1:24)
+  {
+  z = eval(parse(text = list[t]))
+  if(is.null(z) == FALSE){ break }
+  }
+  
+  x[1:8496,z] = all.data[[i]][5]
+}
+
+for(i in which(substring(data_North,35,38) == 2017))
+{
+  type = substring(colnames(all.data[[i]])[4],6,nchar(colnames(all.data[[i]])[4]))
+  
+  for(t in 1:24)
+  {
+  z = eval(parse(text = list[t]))
+  if(is.null(z) == FALSE){ break }
+  }
+  
+  x[(1+8496):(8496+8760),z] = all.data[[i]][4]
+}
+
+for(i in which(substring(data_North,35,38) == 2018))
+{
+  type = substring(colnames(all.data[[i]])[4],6,nchar(colnames(all.data[[i]])[4]))
+  
+  for(t in 1:24)
+  {
+  z = eval(parse(text = list[t]))
+  if(is.null(z) == FALSE){ break }
+  }
+  
+  x[(1+8496+8760):(8496+8760+8760),z] = all.data[[i]][4]
+}
+
+for(i in 1:ncol(x))
+{
+  x[which(is.na(x[,i])),i] = 0
+}
+
+write.table(x,file=\"E:/論文/meteorological/merge different type/North.csv\",sep=\",\",row.names = F, na = \"NA\")
+"
+
+x = gsub("North", "Hsinchu", area)
+y = parse(text = x)
+z = eval(y)
+```
+
+
+
+
+
+final
+```{r}
+#North
+data1 = read.delim("E:\\論文\\traffic\\merge different year\\North.csv", header = T,sep=",")
+data2 = read.delim("E:\\論文\\tpower\\merge different type\\North.csv", header = T,sep=",")
+data2 = data2[,-(1:4)]
+data3 = read.delim("E:\\論文\\meteorological\\merge different type\\North.csv", header = T,sep=",")
+data3 = data3[,-(1:4)]
+which(names(data3)=='WIND_SPEED_North')
+which(names(data3)=='WIND_DIREC_North')
+data3 = data3[,-c(19,20)]
+data = cbind(data1,data2,data3)
+which(names(data)=='UVB_North')
+which(names(data)=='PH_RAIN_North')
+which(names(data)=='RAIN_COND_North')
+data[1:nrow(data),c(32,35,40)] = NA
+write.table(data,file="E:/論文/final/North.csv",sep=",",row.names = F, na = "NA")
+
+
+
+#Other area
+area = "
+data1 = read.delim(\"E:/論文/traffic/merge different year/North.csv\", header = T,sep=\",\")
+data2 = read.delim(\"E:/論文/tpower/merge different type/North.csv\", header = T,sep=\",\")
+data2 = data2[,-(1:4)]
+data3 = read.delim(\"E:/論文/meteorological/merge different type/North.csv\", header = T,sep=\",\")
+data3 = data3[,-(1:4)]
+which(names(data3)=='WIND_SPEED_North')
+which(names(data3)=='WIND_DIREC_North')
+data3 = data3[,-c(19,20)]
+data = cbind(data1,data2,data3)
+write.table(data,file=\"E:/論文/final/North.csv\",sep=\",\",row.names = F, na = \"NA\")
+"
+x = gsub("North", "Kaohsiung", area)
+y = parse(text = x)
+z = eval(y)
+
+#which(names(data3)=='WIND_SPEED_Kaohsiung')
+#which(names(data3)=='WIND_DIREC_Kaohsiung')
+```
+
+all
+```{r}
+data = as.matrix(list.files( path = 'E:/論文/final', pattern="*.csv",full.names = T, recursive = T))
+a = function(b){
+  read.csv( b, stringsAsFactors = FALSE,header = T,check.names = FALSE)
+}
+all.data = lapply(data, a)
+list = all.data[[1]]
+output = as.list(matrix(NA,ncol = 1,nrow = 5))
+
+
+x = all.data[[1]]
+colnames(x) = substring(names(x),1,nchar(names(x))-8)
+colnames(x)[1] = colnames(list)[1]
+colnames(x)[7:11] = colnames(list)[7:11]
+output[[1]] = x
+
+
+x = all.data[[2]]
+colnames(x) = substring(names(x),1,nchar(names(x))-7)
+colnames(x)[1] = colnames(list)[1]
+colnames(x)[7:11] = colnames(list)[7:11]
+output[[2]] = x
+
+
+x = all.data[[3]]
+colnames(x) = substring(names(x),1,nchar(names(x))-8)
+colnames(x)[1] = colnames(list)[1]
+colnames(x)[7:11] = colnames(list)[7:11]
+output[[3]] = x
+
+
+x = all.data[[4]]
+colnames(x) = substring(names(x),1,nchar(names(x))-10)
+colnames(x)[1] = colnames(list)[1]
+colnames(x)[7:11] = colnames(list)[7:11]
+output[[4]] = x
+
+
+x = all.data[[5]]
+colnames(x) = substring(names(x),1,nchar(names(x))-6)
+colnames(x)[1] = colnames(list)[1]
+colnames(x)[7:11] = colnames(list)[7:11]
+output[[5]] = x
+
+
+final = do.call(rbind,output)
+area = final[,7:11]
+Time = final[,1]
+final = final[,-c(1,7:11)]
+final = cbind(Time,area,final)
+
+write.table(final,file="E:/論文/final/all.csv",sep=",",row.names = F, na = "NA")
+```
+
+central
+```{r}
+data = read.delim("E:/論文/final/all.csv", header = T,sep=",")
+central = data[which(data$Central == 1),]
+
+for(i in 7:ncol(central))
+{
+central[,i] = central[,i]/max(central[,i])
+}
+
+central[,which(central[1,] == "NaN")] = 0
+which(names(central)=='PM10')
+central = central[,-33]
+
+list = matrix(NA,ncol = 1,nrow = 38)
+
+for(t in 1:38)
+{
+list[[t]] = cor(central$PM2.5,central[,t+6])
+}
+
+which(names(central)=='PM2.5')
+```
+
+central model
+```{r}
+#rmse、mae
+data = read.delim("E:/論文/final/all.csv", header = T,sep=",")
+central = data[which(data$Central == 1),]
+which(names(central)=='PM2.5')
+
+for(i in 7:33)
+{
+central[,i] = central[,i]/max(abs(central[,i]))
+}
+
+for(i in 35:ncol(central))
+{
+  central[,i] = central[,i]/max(abs(central[,i]))
+}
+
+
+central[,which(central[1,] == "NaN")] = 0
+which(names(central)=='PM10')
+central = central[,-c(33,41,43)]
+season = matrix(0,ncol = 4,nrow = nrow(central))
+colnames(season) = c("spring","summer","fall","winter")
+central = cbind(central,season)
+central$spring[which(substring(central[,1],6,7) == "03")] = 1
+central$spring[which(substring(central[,1],6,7) == "04")] = 1
+central$spring[which(substring(central[,1],6,7) == "05")] = 1
+central$summer[which(substring(central[,1],6,7) == "06")] = 1
+central$summer[which(substring(central[,1],6,7) == "07")] = 1
+central$summer[which(substring(central[,1],6,7) == "08")] = 1
+central$fall[which(substring(central[,1],6,7) == "09")] = 1
+central$fall[which(substring(central[,1],6,7) == "10")] = 1
+central$fall[which(substring(central[,1],6,7) == "11")] = 1
+central$winter[which(substring(central[,1],6,7) == "12")] = 1
+central$winter[which(substring(central[,1],6,7) == "01")] = 1
+central$winter[which(substring(central[,1],6,7) == "02")] = 1
+
+
+random = matrix(1:nrow(central),ncol = 1)
+central_random = cbind(random,central[,7:ncol(central)])
+list = matrix(NA,ncol = 1,nrow = 40)
+mape_train = matrix(NA,ncol = 1,nrow = 1000)
+mape_test = matrix(NA,ncol = 1,nrow = 1000)
+
+  
+
+for(t in 1:40)
+{
+  list[[t]] = cor(central_random$PM2.5,central_random[,t+1])
+}
+central_random = central_random[,-(which(is.na(list))+1)]
+#central_random = central_random[,-(which(list <= 0.05)+1)]
+
+set.seed(1)
+train = sample(central_random[,1], size = 0.7*nrow(central_random), replace = FALSE)
+test = central_random[-train,]
+train = central_random[train,]
+
+A_t <- test$PM2.5
+A_t[which(A_t == 0)] <- mean(A_t)
+
+
+#for(i in 1:1000)
+#{
+dtrain = xgb.DMatrix(data=as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]), label=train$PM2.5)
+dtest = xgb.DMatrix(data=as.matrix(test[,-c(1,which(names(train)=='PM2.5'))]), label=test$PM2.5)
+watchlist = list(train=dtrain, test=dtest)
+
+
+set.seed(2)
+xgb.params = list(
+  #col的抽樣比例，越高表示每棵樹使用的col越多，會增加每棵小樹的複雜度
+  colsample_bytree = 0.7,                    
+  # row的抽樣比例，越高表示每棵樹使用的col越多，會增加每棵小樹的複雜度
+  subsample = 0.9,                      
+  booster = "gbtree",
+  # 樹的最大深度，越高表示模型可以長得越深，模型複雜度越高
+  max_depth = 8,           
+  # boosting會增加被分錯的資料權重，而此參數是讓權重不會增加的那麼快，因此越大會讓模型愈保守
+  eta = 0.05,
+  # 或用'mae'也可以
+  eval_metric = "rmse",                      
+  objective = "reg:linear",
+  # 越大，模型會越保守，相對的模型複雜度比較低
+  gamma = 0) 
+
+
+cv.model = xgb.cv(
+  params = xgb.params, 
+  data = dtrain,
+  nfold = 5,     # 5-fold cv
+  nrounds = 1500,   # 測試1-100，各個樹總數下的模型
+  # 如果當nrounds < 30 時，就已經有overfitting情況發生，那表示不用繼續tune下去了，可以提早停止                
+  early_stopping_rounds = 30, 
+  print_every_n = 20 # 每20個單位才顯示一次結果，
+) 
+
+
+error = cv.model$evaluation_log
+tmp = cv.model$evaluation_log
+
+plot(x=1:nrow(tmp), y= tmp$train_rmse_mean, col='red', xlab="nround", ylab="rmse", main="Avg.Performance in CV")
+points(x=1:nrow(tmp), y= tmp$test_rmse_mean, col='blue') 
+legend("topright", pch=1, col = c("red", "blue"), legend = c("Train", "Validation") )
+
+write.table(error,file="C:\\Users\\jeff\\Desktop\\error.csv",sep=",",row.names = F, na = "NA")
+
+
+
+
+
+#mape
+data = read.delim("E:/論文/final/all.csv", header = T,sep=",")
+central = data[which(data$Central == 1),]
+which(names(central)=='PM2.5')
+
+for(i in 7:33)
+{
+  central[,i] = central[,i]/max(abs(central[,i]))
+}
+
+for(i in 35:ncol(central))
+{
+  central[,i] = central[,i]/max(abs(central[,i]))
+}
+
+
+central[,which(central[1,] == "NaN")] = 0
+which(names(central)=='PM10')
+central = central[,-c(33,41,43)]
+season = matrix(0,ncol = 4,nrow = nrow(central))
+colnames(season) = c("spring","summer","fall","winter")
+central = cbind(central,season)
+central$spring[which(substring(central[,1],6,7) == "03")] = 1
+central$spring[which(substring(central[,1],6,7) == "04")] = 1
+central$spring[which(substring(central[,1],6,7) == "05")] = 1
+central$summer[which(substring(central[,1],6,7) == "06")] = 1
+central$summer[which(substring(central[,1],6,7) == "07")] = 1
+central$summer[which(substring(central[,1],6,7) == "08")] = 1
+central$fall[which(substring(central[,1],6,7) == "09")] = 1
+central$fall[which(substring(central[,1],6,7) == "10")] = 1
+central$fall[which(substring(central[,1],6,7) == "11")] = 1
+central$winter[which(substring(central[,1],6,7) == "12")] = 1
+central$winter[which(substring(central[,1],6,7) == "01")] = 1
+central$winter[which(substring(central[,1],6,7) == "02")] = 1
+
+
+random = matrix(1:nrow(central),ncol = 1)
+central_random = cbind(random,central[,7:ncol(central)])
+list = matrix(NA,ncol = 1,nrow = 40)
+#mape_train = matrix(NA,ncol = 1,nrow = 1500)
+#mape_test = matrix(NA,ncol = 1,nrow = 1500)
+
+
+
+for(t in 1:40)
+{
+  list[[t]] = cor(central_random$PM2.5,central_random[,t+1])
+}
+central_random = round(central_random[,-(which(is.na(list))+1)],2)
+#central_random = central_random[,-(which(list <= 0.05)+1)]
+
+set.seed(1)
+train = sample(central_random[,1], size = 0.7*nrow(central_random), replace = FALSE)
+test = central_random[-train,]
+train = central_random[train,]
+
+set.seed(2)
+xgb <- xgboost(data = as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]), label = train$PM2.5,colsample_bytree = 0.7,  subsample = 0.9, booster = "gbtree", max_depth = 8,           
+eta = 0.05, eval_metric = "rmse", objective = "reg:linear", gamma = 0, nfold = 5, nrounds = 1500, early_stopping_rounds = 30, print_every_n = 20) 
+
+A_t_o = train$PM2.5
+A_t_o[which(A_t_o == 0)] <- mean(A_t_o)
+x_o = predict(xgb, as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]))
+resid_o = train$PM2.5 - x_o
+A_t = test$PM2.5
+A_t[which(A_t == 0)] <- mean(A_t)
+x = predict(xgb, as.matrix(test[,-c(1,which(names(train)=='PM2.5'))]))
+resid = test$PM2.5 - x
+mape_train = 100*mean(abs(resid_o/A_t_o),na.rm = T)
+mape_test = 100*mean(abs(resid/A_t),na.rm = T)
+
+error = cbind(mape_train,mape_test)
+
+look = cbind(test$PM2.5,x)
+```
+
+taiwan model
+```{r}
+data = read.delim("E:/論文/final/all.csv", header = T,sep=",")
+North = read.delim("E:\\論文\\meteorological\\merge different type\\North.csv", header = T,sep=",")
+which(names(North)=='UVB_North')
+which(names(data)=='UVB')
+which(names(North)=='PH_RAIN_North')
+which(names(data)=='PH_RAIN')
+which(names(North)=='RAIN_COND_North')
+which(names(data)=='RAIN_COND')
+
+data[which(data$North == 1),which(names(data)=='UVB')] = North[,which(names(North)=='UVB_North')]
+data[which(data$North == 1),which(names(data)=='PH_RAIN')] = North[,which(names(North)=='PH_RAIN_North')]
+data[which(data$North == 1),which(names(data)=='RAIN_COND')] = North[,which(names(North)=='RAIN_COND_North')]
+
+
+which(names(data)=='PM2.5')
+
+for(i in 7:33)
+{
+  data[,i] = data[,i]/max(abs(data[,i]))
+}
+
+for(i in 35:ncol(data))
+{
+  data[,i] = data[,i]/max(abs(data[,i]))
+}
+
+
+data[,which(data[1,] == "NaN")] = 0
+which(names(data)=='PM10')
+data = data[,-c(33,41,43)]
+season = matrix(0,ncol = 4,nrow = nrow(data))
+colnames(season) = c("spring","summer","fall","winter")
+data = cbind(data,season)
+data$spring[which(substring(data[,1],6,7) == "03")] = 1
+data$spring[which(substring(data[,1],6,7) == "04")] = 1
+data$spring[which(substring(data[,1],6,7) == "05")] = 1
+data$summer[which(substring(data[,1],6,7) == "06")] = 1
+data$summer[which(substring(data[,1],6,7) == "07")] = 1
+data$summer[which(substring(data[,1],6,7) == "08")] = 1
+data$fall[which(substring(data[,1],6,7) == "09")] = 1
+data$fall[which(substring(data[,1],6,7) == "10")] = 1
+data$fall[which(substring(data[,1],6,7) == "11")] = 1
+data$winter[which(substring(data[,1],6,7) == "12")] = 1
+data$winter[which(substring(data[,1],6,7) == "01")] = 1
+data$winter[which(substring(data[,1],6,7) == "02")] = 1
+
+
+random = matrix(1:nrow(data),ncol = 1)
+data_random = cbind(random,data[,2:ncol(data)])
+list = matrix(NA,ncol = 1,nrow = 40)
+mape_train = matrix(NA,ncol = 1,nrow = 1000)
+mape_test = matrix(NA,ncol = 1,nrow = 1000)
+
+
+
+for(t in 1:40)
+{
+  list[[t]] = cor(data_random$PM2.5,data_random[,t+6])
+}
+
+
+set.seed(1)
+train = sample(data_random[,1], size = 0.7*nrow(data_random), replace = FALSE)
+test = data_random[-train,]
+train = data_random[train,]
+
+A_t <- test$PM2.5
+A_t[which(A_t == 0)] <- mean(A_t)
+
+
+#for(i in 1:1000)
+#{
+dtrain = xgb.DMatrix(data=as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]), label=train$PM2.5)
+dtest = xgb.DMatrix(data=as.matrix(test[,-c(1,which(names(train)=='PM2.5'))]), label=test$PM2.5)
+watchlist = list(train=dtrain, test=dtest)
+tree_proportion = as.list(matrix(NA,ncol = 1,nrow = 36))
+
+
+set.seed(2)
+
+  xgb.params = list(
+  #col的抽樣比例，越高表示每棵樹使用的col越多，會增加每棵小樹的複雜度
+  colsample_bytree = 1,                    
+  # row的抽樣比例，越高表示每棵樹使用的col越多，會增加每棵小樹的複雜度
+  subsample = 0.9,                      
+  booster = "gbtree",
+  # 樹的最大深度，越高表示模型可以長得越深，模型複雜度越高
+  max_depth = 11,           
+  # boosting會增加被分錯的資料權重，而此參數是讓權重不會增加的那麼快，因此越大會讓模型愈保守
+  eta = 0.05,
+  # 或用'mae'也可以
+  eval_metric = "mae",                      
+  objective = "reg:linear",
+  # 越大，模型會越保守，相對的模型複雜度比較低
+  gamma = 0) 
+
+
+cv.model = xgb.cv(
+  params = xgb.params, 
+  data = dtrain,
+  nfold = 5,     # 5-fold cv
+  nrounds = 1500,   # 測試1-100，各個樹總數下的模型
+  # 如果當nrounds < 30 時，就已經有overfitting情況發生，那表示不用繼續tune下去了，可以提早停止                
+  early_stopping_rounds = 30, 
+  print_every_n = 20 # 每20個單位才顯示一次結果，
+) 
+
+
+
+#tree_proportion[[(10*i-5)*6+(10*t-4)]] = error[996:1000,4]
+error = cv.model$evaluation_log
+tmp = cv.model$evaluation_log
+
+plot(x=1:nrow(tmp), y= tmp$train_mae_mean, col='red', xlab="nround", ylab="mae", main="Avg.Performance in CV")
+points(x=1:nrow(tmp), y= tmp$test_mae_mean, col='blue') 
+legend("topright", pch=1, col = c("red", "blue"), legend = c("Train", "Validation") )
+
+
+write.table(error,file="C:\\Users\\jeff\\Desktop\\T_mae.csv",sep=",",row.names = F, na = "NA")
+
+
+
+
+
+#mape
+data = read.delim("E:/論文/final/all.csv", header = T,sep=",")
+North = read.delim("E:\\論文\\meteorological\\merge different type\\North.csv", header = T,sep=",")
+which(names(North)=='UVB_North')
+which(names(data)=='UVB')
+which(names(North)=='PH_RAIN_North')
+which(names(data)=='PH_RAIN')
+which(names(North)=='RAIN_COND_North')
+which(names(data)=='RAIN_COND')
+
+data[which(data$North == 1),which(names(data)=='UVB')] = North[,which(names(North)=='UVB_North')]
+data[which(data$North == 1),which(names(data)=='PH_RAIN')] = North[,which(names(North)=='PH_RAIN_North')]
+data[which(data$North == 1),which(names(data)=='RAIN_COND')] = North[,which(names(North)=='RAIN_COND_North')]
+
+
+which(names(data)=='PM2.5')
+
+for(i in 7:33)
+{
+  data[,i] = data[,i]/max(abs(data[,i]))
+}
+
+for(i in 35:ncol(data))
+{
+  data[,i] = data[,i]/max(abs(data[,i]))
+}
+
+
+data[,which(data[1,] == "NaN")] = 0
+which(names(data)=='PM10')
+data = data[,-c(33,41,43)]
+season = matrix(0,ncol = 4,nrow = nrow(data))
+colnames(season) = c("spring","summer","fall","winter")
+data = cbind(data,season)
+data$spring[which(substring(data[,1],6,7) == "03")] = 1
+data$spring[which(substring(data[,1],6,7) == "04")] = 1
+data$spring[which(substring(data[,1],6,7) == "05")] = 1
+data$summer[which(substring(data[,1],6,7) == "06")] = 1
+data$summer[which(substring(data[,1],6,7) == "07")] = 1
+data$summer[which(substring(data[,1],6,7) == "08")] = 1
+data$fall[which(substring(data[,1],6,7) == "09")] = 1
+data$fall[which(substring(data[,1],6,7) == "10")] = 1
+data$fall[which(substring(data[,1],6,7) == "11")] = 1
+data$winter[which(substring(data[,1],6,7) == "12")] = 1
+data$winter[which(substring(data[,1],6,7) == "01")] = 1
+data$winter[which(substring(data[,1],6,7) == "02")] = 1
+
+
+random = matrix(1:nrow(data),ncol = 1)
+data_random = cbind(random,data[,2:ncol(data)])
+list = matrix(NA,ncol = 1,nrow = 40)
+mape_train = matrix(NA,ncol = 1,nrow = 1000)
+mape_test = matrix(NA,ncol = 1,nrow = 1000)
+
+
+
+for(t in 1:40)
+{
+  list[[t]] = cor(data_random$PM2.5,data_random[,t+6])
+}
+
+
+set.seed(1)
+train = sample(data_random[,1], size = 0.7*nrow(data_random), replace = FALSE)
+test = data_random[-train,]
+train = data_random[train,]
+
+set.seed(2)
+xgb <- xgboost(data = as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]), label = train$PM2.5,colsample_bytree = 1,  subsample = 0.9,
+               booster = "gbtree", max_depth = 11,eta = 0.05, eval_metric = "rmse", objective = "reg:linear", gamma = 0, nfold = 5, 
+               nrounds = 1500, early_stopping_rounds = 30, print_every_n = 20) 
+
+A_t_o = train$PM2.5
+A_t_o[which(A_t_o == 0)] <- mean(A_t_o)
+x_o = predict(xgb, as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]))
+resid_o = train$PM2.5 - x_o
+A_t = test$PM2.5
+A_t[which(A_t == 0)] <- mean(A_t)
+x = predict(xgb, as.matrix(test[,-c(1,which(names(train)=='PM2.5'))]))
+resid = test$PM2.5 - x
+mape_train = 100*mean(abs(resid_o/A_t_o),na.rm = T)
+mape_test = 100*mean(abs(resid/A_t),na.rm = T)
+
+error = cbind(mape_train,mape_test)
+
+look = cbind(test$PM2.5,x)
+```
+
+predict Taiwan model
+```{r}
+data = read.delim("E:/論文/final/all.csv", header = T,sep=",")
+North = read.delim("E:\\論文\\meteorological\\merge different type\\North.csv", header = T,sep=",")
+which(names(North)=='UVB_North')
+which(names(data)=='UVB')
+which(names(North)=='PH_RAIN_North')
+which(names(data)=='PH_RAIN')
+which(names(North)=='RAIN_COND_North')
+which(names(data)=='RAIN_COND')
+
+data[which(data$North == 1),which(names(data)=='UVB')] = North[,which(names(North)=='UVB_North')]
+data[which(data$North == 1),which(names(data)=='PH_RAIN')] = North[,which(names(North)=='PH_RAIN_North')]
+data[which(data$North == 1),which(names(data)=='RAIN_COND')] = North[,which(names(North)=='RAIN_COND_North')]
+
+
+which(names(data)=='PM2.5')
+
+for(i in 7:33)
+{
+  data[,i] = data[,i]/max(abs(data[,i]))
+}
+
+for(i in 35:ncol(data))
+{
+  data[,i] = data[,i]/max(abs(data[,i]))
+}
+
+
+data[,which(data[1,] == "NaN")] = 0
+which(names(data)=='PM10')
+data = data[,-c(33,41,43)]
+season = matrix(0,ncol = 4,nrow = nrow(data))
+colnames(season) = c("spring","summer","fall","winter")
+data = cbind(data,season)
+data$spring[which(substring(data[,1],6,7) == "03")] = 1
+data$spring[which(substring(data[,1],6,7) == "04")] = 1
+data$spring[which(substring(data[,1],6,7) == "05")] = 1
+data$summer[which(substring(data[,1],6,7) == "06")] = 1
+data$summer[which(substring(data[,1],6,7) == "07")] = 1
+data$summer[which(substring(data[,1],6,7) == "08")] = 1
+data$fall[which(substring(data[,1],6,7) == "09")] = 1
+data$fall[which(substring(data[,1],6,7) == "10")] = 1
+data$fall[which(substring(data[,1],6,7) == "11")] = 1
+data$winter[which(substring(data[,1],6,7) == "12")] = 1
+data$winter[which(substring(data[,1],6,7) == "01")] = 1
+data$winter[which(substring(data[,1],6,7) == "02")] = 1
+
+
+random = matrix(1:nrow(data),ncol = 1)
+data_random = cbind(random,data[,2:ncol(data)])
+list = matrix(NA,ncol = 1,nrow = 45)
+mape_train = matrix(NA,ncol = 1,nrow = 1000)
+mape_test = matrix(NA,ncol = 1,nrow = 1000)
+
+
+
+for(t in 1:45)
+{
+  list[[t]] = cor(data_random$PM2.5,data_random[,t+1])
+}
+
+
+set.seed(1)
+train = sample(data_random[,1], size = 0.7*nrow(data_random), replace = FALSE)
+test = data_random[-train,]
+train = data_random[train,]
+
+A_t <- test$PM2.5
+A_t[which(A_t == 0)] <- mean(A_t)
+
+
+#for(i in 1:1000)
+#{
+dtrain = xgb.DMatrix(data=as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]), label=train$PM2.5)
+dtest = xgb.DMatrix(data=as.matrix(test[,-c(1,which(names(train)=='PM2.5'))]), label=test$PM2.5)
+watchlist = list(train=dtrain, test=dtest)
+tree_proportion = as.list(matrix(NA,ncol = 1,nrow = 36))
+
+
+set.seed(2)
+xgb <- xgboost(data = as.matrix(train[,-c(1,which(names(train)=='PM2.5'))]), label = train$PM2.5,colsample_bytree = 1,  subsample = 0.9,
+               booster = "gbtree", max_depth = 11,eta = 0.05, eval_metric = "rmse", objective = "reg:linear", gamma = 0, nrounds = 1500, 
+               early_stopping_rounds = 30, print_every_n = 20)
+
+
+
+
+feature_central = read.delim("E:/論文/final/into xgb/central.csv", header = T,sep=",")
+predict = as.data.frame(matrix(NA,ncol = 44,nrow = 24))
+colnames(predict) = colnames(train)[-c(1,which(names(train)=='PM2.5'))]
+
+x = matrix(NA,ncol = 5,nrow = 44)
+x[,1] = "if(type == \""
+y = colnames(predict)
+x[,2] = y
+x[,3] = "\"){z = "
+x[,4] = 1:44
+x[,5] = "}"
+list2 = as.matrix(paste0(x[,1],x[,2],x[,3],x[,4],x[,5]))
+
+
+for(i in 1:ncol(feature_central))
+{
+  type = colnames(feature_central)[i]
+  
+  for(t in 1:44)
+  {
+    z = eval(parse(text = list2[t]))
+    if(is.null(z) == FALSE){ break }
+  }
+  
+  predict[,z] = feature_central[,i]
+}
+
+predict[,which(is.na(predict[1,]))] = 0
+
+parameter = predict[1,1:44]
+zz = as.matrix(predict(xgb, as.matrix(parameter)))
+
+parameter$winter = 1
+parameter$spring = 0
+parameter$summer = 0
+parameter$fall = 0
+z1= as.matrix(predict(xgb, as.matrix(parameter)))
+parameter_o = parameter
+
+select = matrix(NA,ncol = 121,nrow = 1331)
+
+
+for(e in 0:10)
+{
+parameter$type42 = parameter_o$type42 - 0.1*e*parameter_o$type42
+for(d in 0:10)
+{
+parameter$type41 = parameter_o$type41 - 0.1*d*parameter_o$type41
+for(c in 0:10)
+{
+parameter$type32 = parameter_o$type32 - 0.1*c*parameter_o$type32
+for(b in (1+11*d):(11+11*d))
+{
+parameter$type31 = parameter_o$type31 - 0.1*(b-(1+11*d))*parameter_o$type31
+for(a in (1+11*c+121*e):(11+11*c+121*e))
+{
+parameter$type5 = parameter_o$type5 - 0.1*(a-(1+11*c+121*e))*parameter_o$type5
+select[a,b] = as.matrix(predict(xgb, as.matrix(parameter)))
+}
+}
+}
+}
+}
+parameter = parameter_o
+parameter[,6:22] = 0
+as.matrix(predict(xgb, as.matrix(parameter)))
+which(select < 39)
+```
+
+predict Central model(no gas)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+add season
+```{r}
+adjust = "
+data = read.delim(\"E:/論文/final/all.csv\", header = T,sep=\",\")
+season = matrix(0,ncol = 4,nrow = nrow(central))
+colnames(season) = c(\"spring\",\"summer\",\"fall\",\"winter\")
+central = cbind(central,season)
+central$spring[which(substring(central[,1],6,7) == \"03\")] = 1
+central$spring[which(substring(central[,1],6,7) == \"04\")] = 1
+central$spring[which(substring(central[,1],6,7) == \"05\")] = 1
+central$summer[which(substring(central[,1],6,7) == \"06\")] = 1
+central$summer[which(substring(central[,1],6,7) == \"07\")] = 1
+central$summer[which(substring(central[,1],6,7) == \"08\")] = 1
+central$fall[which(substring(central[,1],6,7) == \"09\")] = 1
+central$fall[which(substring(central[,1],6,7) == \"10\")] = 1
+central$fall[which(substring(central[,1],6,7) == \"11\")] = 1
+central$winter[which(substring(central[,1],6,7) == \"12\")] = 1
+central$winter[which(substring(central[,1],6,7) == \"01\")] = 1
+central$winter[which(substring(central[,1],6,7) == \"02\")] = 1
+"
+
+
+x = gsub("central", "data", adjust)
+y = parse(text = x)
+z = eval(y)
+
+write.table(data,file="E:/論文/final/all_add season.csv",sep=",",row.names = F, na = "NA")
+```
+
+eval character
+```{r}
+test
+data = read.delim("C:\\Users\\jeff\\Desktop\\test.txt", header = F)
+x = parse(text = data)
+eval(zz)
+pop_shiang <- as.matrix(data[grep("North", data[,1]), ])
+x <- gsub("North", "Hsinchu", data[,1])
+z = "data = as.matrix(list.files( path = 'E:/論文/tpower/sum all site', pattern=\"*.csv\",full.names = T, recursive = T))"
+x = as.character(data[1,1])
+for(i in 2:nrow(data))
+{
+x = paste0(x,as.character(data[i,1]))
+}
+y = parse(text = x)
+z = eval(y)
+
+
+
+#test = "
+#data = as.matrix(list.files( path = 'E:/論文/tpower/sum all site', pattern=\"*.csv\",full.names = T, recursive = T))
+.....
+
+x = gsub("North", "Hsinchu", test)
+
+test2 = read.delim("C:\\Users\\jeff\\Desktop\\test.txt", header = F)
+xx = as.matrix(gsub("North", "Hsinchu", test2[,1]))
+
+y = parse(text = test)
+z = eval(y)
+```
+
+input plural files
+```{r}
+setwd("C:\\Users\\jeff\\Desktop\\meteorological\\2016\\North")
+getwd()
+csvpath = "C:\\Users\\jeff\\Desktop\\meteorological\\2016\\North"
+csvfilesn = list.files( path = csvpath, pattern="*.csv")
+#recursive = T
+tmprt = function(rtcsv){
+  read.csv( rtcsv, stringsAsFactors = FALSE)
+}
+lhudata = lapply(paste(csvpath,csvfilesn, sep = "/"), tmprt)
+csvfilesn
+data1 = lhudata[[1]]
+```
+
+read files
+```{r}
+#txt
+#install.packages("tidyverse")
+#library(readr)
+data = read.table("F:\\專題研究\\台電逐時資料\\台電2015-2016.txt", header=T, sep=" ")
+data2 = read.table("F:\\專題研究\\台電逐時資料\\台電2015-2016.txt", header=T,fill = TRUE )
+data3 = scan("F:\\專題研究\\台電逐時資料\\台電2015-2016.txt", "")
+data4 = read.table("C:\\Users\\jeff\\Desktop\\台電2015-2016.txt", header=T,sep="",fill = TRUE,col.names = paste0("V", seq_len(7)))
+data5 = read.csv("C:\\Users\\jeff\\Desktop\\台電逐時資料\\台電2015-2016.csv", header=T,sep="",fill = TRUE,fileEncoding = "UTF-8")
+data6 = read.table("C:\\Users\\jeff\\Desktop\\台電2015-2016.txt", header=T,sep="",fill = TRUE,fileEncoding = "UTF-8")
+data7 = read.delim("C:\\Users\\jeff\\Desktop\\台電2015-2016.txt", header = T,sep="")
+
+#count.fields
+zzz = count.fields(file = "C:\\Users\\jeff\\Desktop\\台電逐時資料\\台電2015-2016.csv", sep="")[1:10]
+
+
+#csv
+file = read.csv("E:\\論文\\traffic\\2017 2018順序.csv", check.names = FALSE,header = F)
+csvfilesn = list.files( path = 'E:/論文/traffic/sum all site', pattern="*.csv",full.names = T)
+csvfilesn = as.matrix(csvfilesn)
+csvfilesn1 = list.files( path = 'E:/論文/traffic/sum all site', pattern="*.csv")
+csvfilesn1 = as.matrix(csvfilesn1)
+x = as.matrix(substring(file[,1],28,nchar(as.character(file[,1]))))
+y = matrix( NA , nrow = 50, ncol = 1)
+for (i in 1:50)
+{
+y[i,1] = csvfilesn[which(csvfilesn1[,1] == x[i,1]),]
+}
+a = "read.csv('"
+b = "', check.names = FALSE,header = T)"
+c = paste0(a,y,b)
+z = parse(text = c[1])
+zz = eval(z)
+for (i in 2:10)
+{
+z = parse(text = c[i])
+z = eval(z)
+n = as.matrix(z[,4])
+colnames(n) = "all site"
+zz = cbind(zz,n)
+}
+
+#
+xx = as.character("'E:/論文/traffic/sum all site/2016_type5_North.csv'")
+y = "read.csv("
+z = ", check.names = FALSE,header = F)"
+xx = paste0(y,x,z)
+
+xxx = parse(text = xx)
+xxxx = eval(xxx)
+```
+
