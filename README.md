@@ -13,3 +13,5 @@ Finally, do sensitivity analysis.
 Example of traffic sensitivity analysis table：
 
 ![image](https://github.com/jeff611196/Master-s-Thesis/blob/master/taipei_traffic_pheatmap.png)
+
+The dark area is the area where the 110 groups of minimum PM2.5 conditions meet the more conditions.
