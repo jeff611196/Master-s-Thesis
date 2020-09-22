@@ -10,6 +10,6 @@ Treat the parameters as the input of the XGBoost model.
 
 Finally, do sensitivity analysis.
 
-EXample of sensitivity analysis table
+Example of traffic sensitivity analysis table
 
 ![image](https://github.com/jeff611196/Master-s-Thesis/blob/master/taipei_traffic_pheatmap.png)
