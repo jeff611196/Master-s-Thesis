@@ -2,7 +2,7 @@
 Analysis of the influence of traffic flow and power generation on air pollution.
 
 Choose XGBoost as the model.
-(U
+(Use stepwise to choose parameters)
 
 And then use LSTM model to predict future parameters.
 (LSTM built using the Keras Python package to predict time series steps and sequences.)
